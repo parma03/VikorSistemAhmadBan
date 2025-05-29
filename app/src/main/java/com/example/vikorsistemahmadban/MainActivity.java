@@ -1,5 +1,6 @@
 package com.example.vikorsistemahmadban;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -16,7 +17,6 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.vikorsistemahmadban.activity.admin.MainAdminActivity;
 import com.example.vikorsistemahmadban.activity.pimpinan.MainPimpinanActivity;
-import com.example.vikorsistemahmadban.activity.pengguna.MainPenggunaActivity;
 import com.example.vikorsistemahmadban.api.JDBCConnection;
 import com.example.vikorsistemahmadban.api.PrefManager;
 import com.example.vikorsistemahmadban.databinding.ActivityMainBinding;
@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding binding;
     private PrefManager prefManager;
     private JDBCConnection jdbcConnection;
+    private ProgressDialog progressDialog;
     private static final String TAG = "MainActivity";
 
     @Override
@@ -47,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
         prefManager = new PrefManager(this);
         jdbcConnection = new JDBCConnection();
 
+        // Initialize progress dialog
+        initializeProgressDialog();
+
         // Cek apakah user sudah login
         checkLoginStatus();
 
@@ -57,6 +61,15 @@ public class MainActivity extends AppCompatActivity {
                 performLogin();
             }
         });
+    }
+
+    private void initializeProgressDialog() {
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("Mohon Tunggu");
+        progressDialog.setMessage("Sedang memproses login...");
+        progressDialog.setIndeterminate(true);
+        progressDialog.setCancelable(false);
+        progressDialog.setCanceledOnTouchOutside(false);
     }
 
     private void checkLoginStatus() {
@@ -84,33 +97,73 @@ public class MainActivity extends AppCompatActivity {
         binding.tilEmail.setError(null);
         binding.tilPassword.setError(null);
 
-        // Disable tombol login saat proses
-        binding.btnLogin.setEnabled(false);
-        binding.btnLogin.setText("Memproses...");
-
         // Jalankan login dalam background thread
         new LoginTask().execute(username, password);
     }
 
-    private class LoginTask extends AsyncTask<String, Void, LoginResult> {
+    private class LoginTask extends AsyncTask<String, String, LoginResult> {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // Tampilkan loading dialog
+            showLoadingDialog("Menghubungkan ke server...");
+        }
+
         @Override
         protected LoginResult doInBackground(String... params) {
             String username = params[0];
             String password = params[1];
 
+            // Update progress message
+            publishProgress("Memverifikasi kredensial...");
+
+            try {
+                // Simulasi delay untuk menunjukkan loading (opsional)
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
             return authenticateUser(username, password);
         }
 
         @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+            // Update pesan loading dialog
+            if (progressDialog != null && progressDialog.isShowing()) {
+                progressDialog.setMessage(values[0]);
+            }
+        }
+
+        @Override
         protected void onPostExecute(LoginResult result) {
-            // Enable tombol login kembali
-            binding.btnLogin.setEnabled(true);
-            binding.btnLogin.setText("Login");
+            // Sembunyikan loading dialog
+            hideLoadingDialog();
 
             if (result.success) {
                 showSuccessAlert(result);
             } else {
                 showErrorAlert(result.message);
+            }
+        }
+    }
+
+    private void showLoadingDialog(String message) {
+        if (progressDialog != null && !isFinishing()) {
+            progressDialog.setMessage(message);
+            if (!progressDialog.isShowing()) {
+                progressDialog.show();
+            }
+        }
+    }
+
+    private void hideLoadingDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            try {
+                progressDialog.dismiss();
+            } catch (Exception e) {
+                Log.e(TAG, "Error dismissing progress dialog: " + e.getMessage());
             }
         }
     }
@@ -133,17 +186,14 @@ public class MainActivity extends AppCompatActivity {
                     "CASE " +
                     "WHEN u.role = 'admin' THEN a.nama " +
                     "WHEN u.role = 'pimpinan' THEN p.nama " +
-                    "WHEN u.role = 'pengguna' THEN pg.nama " +
                     "END as nama_user, " +
                     "CASE " +
                     "WHEN u.role = 'admin' THEN a.profile " +
                     "WHEN u.role = 'pimpinan' THEN p.profile " +
-                    "WHEN u.role = 'pengguna' THEN pg.profile " +
                     "END as profile_user " +
                     "FROM tb_user u " +
                     "LEFT JOIN tb_admin a ON u.id_user = a.id_user " +
                     "LEFT JOIN tb_pimpinan p ON u.id_user = p.id_user " +
-                    "LEFT JOIN tb_pengguna pg ON u.id_user = pg.id_user " +
                     "WHERE u.username = ? AND u.password = ?";
 
             pstmt = conn.prepareStatement(query);
@@ -200,11 +250,18 @@ public class MainActivity extends AppCompatActivity {
                 .setMessage("Selamat datang, " + (result.nama != null ? result.nama : result.username) + "!")
                 .setIcon(android.R.drawable.ic_dialog_info)
                 .setPositiveButton("OK", (dialog, which) -> {
+                    // Tampilkan loading saat menyiapkan halaman utama
+                    showLoadingDialog("Menyiapkan halaman utama...");
+
                     // Simpan data user ke SharedPreferences
                     saveUserData(result);
 
-                    // Redirect ke halaman sesuai role
-                    redirectToMainActivity(result.role);
+                    // Delay sedikit untuk efek loading
+                    new android.os.Handler().postDelayed(() -> {
+                        hideLoadingDialog();
+                        // Redirect ke halaman sesuai role
+                        redirectToMainActivity(result.role);
+                    }, 1000);
                 })
                 .setCancelable(false)
                 .show();
@@ -243,9 +300,6 @@ public class MainActivity extends AppCompatActivity {
             case "pimpinan":
                 intent = new Intent(MainActivity.this, MainPimpinanActivity.class);
                 break;
-            case "pengguna":
-                intent = new Intent(MainActivity.this, MainPenggunaActivity.class);
-                break;
             default:
                 showErrorAlert("Role tidak valid: " + role);
                 return;
@@ -272,8 +326,26 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        // Pastikan dialog ditutup untuk mencegah memory leak
+        if (progressDialog != null) {
+            if (progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+            progressDialog = null;
+        }
+
         if (binding != null) {
             binding = null;
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Sembunyikan dialog saat activity di-pause untuk mencegah WindowLeaked
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
         }
     }
 }

@@ -6,7 +6,15 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- Allow clear text traffic for HTTP connections (if needed) -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
+    <!-- Tambahkan permissions ini di AndroidManifest.xml sebelum tag <application> -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Untuk Android 13+ (API 33+), tambahkan juga: -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
     <application
+        android:requestLegacyExternalStorage="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -16,6 +24,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.VikorSistemAhmadBan"
         tools:targetApi="31">
+        <activity
+            android:name=".activity.admin.DataUserActivity"
+            android:exported="false" />
         <activity
             android:name=".activity.pimpinan.MainPimpinanActivity"
             android:exported="false" />

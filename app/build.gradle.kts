@@ -46,4 +46,6 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
     implementation (libs.jackson.android.networking)
     implementation(libs.mysql.connector.java)
+    implementation(libs.glide)
+    annotationProcessor(libs.compiler)
 }
