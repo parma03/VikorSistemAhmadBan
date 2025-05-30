@@ -52,7 +52,9 @@ public class MainAdminActivity extends AppCompatActivity {
         });
 
         binding.cardDataKriteria.setOnClickListener(v -> {
-            // KONTOL
+            // Intent ke DataKriteriaActivity
+            // Intent intent = new Intent(MainAdminActivity.this, DataKriteriaActivity.class);
+            // startActivity(intent);
         });
 
         binding.cardDataSubKriteria.setOnClickListener(v -> {
