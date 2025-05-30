@@ -47,9 +47,8 @@ public class MainAdminActivity extends AppCompatActivity {
         });
 
         binding.cardDataBan.setOnClickListener(v -> {
-            // Intent ke DataBanActivity
-            // Intent intent = new Intent(MainAdminActivity.this, DataBanActivity.class);
-            // startActivity(intent);
+            Intent intent = new Intent(MainAdminActivity.this, DataBanActivity.class);
+            startActivity(intent);
         });
 
         binding.cardDataKriteria.setOnClickListener(v -> {
