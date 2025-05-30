@@ -338,7 +338,7 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
         tvDeskripsiDetail.setText(ban.getDeskripsi());
         tvCreatedAtDetail.setText(ban.getCreated_at());
 
-        // Load irmage - Handle null/empty
+        // Load image - Handle null/empty
         if (ban.getFoto_ban() != null && !ban.getFoto_ban().trim().isEmpty()) {
             if (ban.getFoto_ban().startsWith("data:image") || ban.getFoto_ban().length() > 100) {
                 // Base64 image
