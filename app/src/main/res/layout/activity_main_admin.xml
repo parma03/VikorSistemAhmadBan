@@ -307,6 +307,7 @@
                     android:layout_width="0dp"
                     android:layout_height="140dp"
                     android:layout_columnWeight="1"
+                    android:layout_columnSpan="2"
                     android:layout_margin="8dp"
                     android:clickable="true"
                     android:focusable="true"
@@ -331,7 +332,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Data Kriteria"
+                            android:text="Data Sub/Kriteria"
                             android:textColor="@android:color/white"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -340,60 +341,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Kelola Kriteria"
+                            android:text="Kelola Sub/Kriteria"
                             android:textColor="@android:color/white"
                             android:textSize="12sp"
                             android:alpha="0.8" />
-
-                    </LinearLayout>
-
-                </androidx.cardview.widget.CardView>
-
-                <!-- Data Sub Kriteria Menu -->
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/cardDataSubKriteria"
-                    android:layout_width="0dp"
-                    android:layout_height="140dp"
-                    android:layout_columnWeight="1"
-                    android:layout_margin="8dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    app:cardBackgroundColor="@color/card_sub_kriteria"
-                    app:cardCornerRadius="16dp"
-                    app:cardElevation="6dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-                        <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:layout_marginBottom="12dp"
-                            android:src="@mipmap/ic_sub_kriteria_foreground"
-                            app:tint="@android:color/white" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Data Sub Kriteria"
-                            android:textColor="@android:color/white"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textAlignment="center" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:text="Kelola Sub Kriteria"
-                            android:textColor="@android:color/white"
-                            android:textSize="12sp"
-                            android:alpha="0.8"
-                            android:textAlignment="center" />
 
                     </LinearLayout>
 
