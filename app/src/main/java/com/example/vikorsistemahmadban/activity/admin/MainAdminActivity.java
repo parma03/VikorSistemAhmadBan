@@ -69,6 +69,7 @@ public class MainAdminActivity extends AppCompatActivity {
             // Intent ke ProfileSettingActivity
             // Intent intent = new Intent(MainAdminActivity.this, ProfileSettingActivity.class);
             // startActivity(intent);
+            // MEMEK
         });
 
         binding.menuLogout.setOnClickListener(v -> {
