@@ -52,15 +52,8 @@ public class MainAdminActivity extends AppCompatActivity {
         });
 
         binding.cardDataKriteria.setOnClickListener(v -> {
-            // Intent ke DataKriteriaActivity
-            // Intent intent = new Intent(MainAdminActivity.this, DataKriteriaActivity.class);
-            // startActivity(intent);
-        });
-
-        binding.cardDataSubKriteria.setOnClickListener(v -> {
-            // Intent ke DataSubKriteriaActivity
-            // Intent intent = new Intent(MainAdminActivity.this, DataSubKriteriaActivity.class);
-            // startActivity(intent);
+             Intent intent = new Intent(MainAdminActivity.this, DataKriteriaActivity.class);
+             startActivity(intent);
         });
 
         // Dropdown menu items click listeners
