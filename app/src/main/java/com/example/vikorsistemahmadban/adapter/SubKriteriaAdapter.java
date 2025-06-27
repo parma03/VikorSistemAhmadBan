@@ -108,7 +108,7 @@ public class SubKriteriaAdapter extends RecyclerView.Adapter<SubKriteriaAdapter.
             tvBobot.setText("Bobot: " + subKriteria.getBobot_sub_kriteria());
 
             // Set background color based on classification
-            setBackgroundByKlasifikasi(subKriteria.getKlasifikasi());
+            setBackgroundByKlasifikasi(subKriteria.getBobot_sub_kriteria());
 
             chipEdit.setOnClickListener(v -> {
                 if (listener != null) {
@@ -127,28 +127,30 @@ public class SubKriteriaAdapter extends RecyclerView.Adapter<SubKriteriaAdapter.
             animateItemEntry();
         }
 
-        private void setBackgroundByKlasifikasi(String klasifikasi) {
+        private void setBackgroundByKlasifikasi(int bobot) {
             int colorRes;
-            switch (klasifikasi) {
-                case "Sangat Baik":
-                    colorRes = R.color.success_green;
-                    break;
-                case "Baik":
-                    colorRes = R.color.primary_blue;
-                    break;
-                case "Cukup":
-                    colorRes = R.color.purple_200;
-                    break;
-                case "Buruk":
-                    colorRes = R.color.warning_orange;
-                    break;
-                case "Sangat Buruk":
-                    colorRes = R.color.error_red;
-                    break;
-                default:
-                    colorRes = R.color.textColor;
-                    break;
+
+            // Konversi string bobot menjadi nilai integer
+            int nilaiBobot;
+            try {
+                nilaiBobot = Integer.parseInt(String.valueOf(bobot));
+            } catch (NumberFormatException e) {
+                nilaiBobot = -1; // Nilai default jika parsing gagal
             }
+
+            // Tentukan warna berdasarkan nilai bobot
+            if (nilaiBobot >= 100) {
+                colorRes = R.color.success_green; // Sangat Baik
+            } else if (nilaiBobot >= 80) {
+                colorRes = R.color.primary_blue; // Baik
+            } else if (nilaiBobot >= 60) {
+                colorRes = R.color.purple_200; // Cukup
+            } else if (nilaiBobot >= 40) {
+                colorRes = R.color.warning_orange; // Buruk
+            } else {
+                colorRes = R.color.error_red; // Sangat Buruk atau tidak valid
+            }
+
             cardView.setCardBackgroundColor(ContextCompat.getColor(context, colorRes));
         }
 

@@ -43,14 +43,18 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class DataKriteriaActivity extends AppCompatActivity implements KriteriaAdapter.OnItemClickListener, KriteriaAdapter.OnSwipeActionListener {
     private ActivityDataKriteriaBinding binding;
     private List<KriteriaModel> kriteriaModelList;
     private JDBCConnection jdbcConnection;
     private KriteriaAdapter kriteriaAdapter;
+    private DecimalFormat decimalFormat;
+    private static final int MAX_NILAI = 400;
 
     // Helper class untuk mengirim data kriteria dan sub kriteria
     private static class KriteriaWithSubKriteria {
@@ -85,6 +89,7 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
     private void initializeViews() {
         jdbcConnection = new JDBCConnection();
         kriteriaModelList = new ArrayList<>();
+        decimalFormat = new DecimalFormat("#.##");
 
         // Setup FAB click listener
         binding.fabAddKriteria.setOnClickListener(v -> showAddKriteriaDialog());
@@ -310,6 +315,7 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
 
         // Initialize views
         TextView tvNamaKriteriaDetail = dialogView.findViewById(R.id.tvNamaKriteriaDetail);
+        TextView tvNilaiDetail = dialogView.findViewById(R.id.tvNilaiDetail);
         TextView tvBobotDetail = dialogView.findViewById(R.id.tvBobotDetail);
         TextView tvIdKriteriaDetail = dialogView.findViewById(R.id.tvIdKriteriaDetail);
         RecyclerView rvSubKriteria = dialogView.findViewById(R.id.rvSubKriteriaDetail);
@@ -317,6 +323,7 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
         // Set data
         tvNamaKriteriaDetail.setText(kriteria.getNama_kriteria());
         tvIdKriteriaDetail.setText("ID: " + kriteria.getId_kriteria());
+        tvNilaiDetail.setText(kriteria.getNilai());
         tvBobotDetail.setText(kriteria.getBobot());
 
         // Load and display sub kriteria
@@ -372,9 +379,14 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_kriteria_form, null);
 
         EditText etNamaKriteria = dialogView.findViewById(R.id.etNamaKriteria);
-        EditText etBobot = dialogView.findViewById(R.id.etBobot);
+        EditText etNilai = dialogView.findViewById(R.id.etNilai);
+        TextView etBobot = dialogView.findViewById(R.id.tvBobot);
         RecyclerView rvSubKriteria = dialogView.findViewById(R.id.rvSubKriteria);
         Button btnAddSubKriteria = dialogView.findViewById(R.id.btnAddSubKriteria);
+        TextView tvBobotLabel = dialogView.findViewById(R.id.tvBobotLabel);
+
+        // Show bobot calculation info
+        tvBobotLabel.setText("Bobot (Auto calculated from Nilai/400):");
 
         // Sub kriteria adapter
         SubKriteriaAdapter subKriteriaAdapter = new SubKriteriaAdapter(this);
@@ -384,12 +396,13 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
         // Fill data if editing
         if (kriteria != null) {
             etNamaKriteria.setText(kriteria.getNama_kriteria());
+            etNilai.setText(kriteria.getNilai());
             etBobot.setText(kriteria.getBobot());
             // Load existing sub kriteria
             loadSubKriteriaForEdit(subKriteriaAdapter, kriteria.getId_kriteria());
         } else {
             // Initialize with default sub kriteria for new kriteria
-            initializeDefaultSubKriteria(subKriteriaAdapter);
+            etBobot.setText("0.00");
         }
 
         // Setup sub kriteria actions
@@ -407,50 +420,106 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
 
         btnAddSubKriteria.setOnClickListener(v -> showSubKriteriaFormDialog(null, -1, subKriteriaAdapter));
 
+        // Add TextWatcher to auto calculate bobot when nilai changes
+        etNilai.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String nilaiStr = s.toString().trim();
+                if (!nilaiStr.isEmpty()) {
+                    try {
+                        int nilai = Integer.parseInt(nilaiStr);
+                        if (nilai > MAX_NILAI) {
+                            etNilai.setError("Nilai maksimal adalah " + MAX_NILAI);
+                            etBobot.setText("0.00");
+                        } else {
+                            etNilai.setError(null);
+                            double bobot = (double) nilai / MAX_NILAI;
+
+                            // Gunakan String.format untuk konsistensi format
+                            String bobotFormatted = String.format(Locale.US, "%.2f", bobot);
+
+                            // Validasi untuk memastikan tidak melebihi 999.99
+                            if (bobot > 999.99) {
+                                etBobot.setText("999.99");
+                            } else {
+                                etBobot.setText(bobotFormatted);
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        etBobot.setText("0.00");
+                    }
+                } else {
+                    etBobot.setText("0.00");
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setView(dialogView)
                 .setTitle(title)
                 .setPositiveButton("Simpan", (dialog, which) -> {
                     String namaKriteria = etNamaKriteria.getText().toString().trim();
-                    String bobotKriteria = etBobot.getText().toString().trim();
+                    String nilaiStr = etNilai.getText().toString().trim();
 
-                    if (namaKriteria.isEmpty() || bobotKriteria.isEmpty()) {
-                        Toast.makeText(this, "Nama Kriteria dan Bobot harus diisi!", Toast.LENGTH_SHORT).show();
+                    if (namaKriteria.isEmpty() || nilaiStr.isEmpty()) {
+                        Toast.makeText(this, "Nama Kriteria dan Nilai harus diisi!", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    List<SubKriteriaModel> subKriteriaList = subKriteriaAdapter.getSubKriteriaList();
-                    if (subKriteriaList.isEmpty()) {
-                        Toast.makeText(this, "Minimal harus ada 1 sub kriteria!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+                    try {
+                        int nilai = Integer.parseInt(nilaiStr);
+                        if (nilai > MAX_NILAI) {
+                            Toast.makeText(this, "Nilai maksimal adalah " + MAX_NILAI, Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
-                    KriteriaModel newKriteria = new KriteriaModel(
-                            kriteria != null ? kriteria.getId_kriteria() : null,
-                            namaKriteria,
-                            bobotKriteria
-                    );
+                        double bobot = (double) nilai / MAX_NILAI;
+                        String bobotStr = String.format(Locale.US, "%.2f", bobot);
 
-                    if (kriteria == null) {
-                        // Add new kriteria with sub kriteria
-                        new AddKriteriaWithSubKriteriaTask().execute(new KriteriaWithSubKriteria(newKriteria, subKriteriaList));
-                    } else {
-                        // Update kriteria with sub kriteria
-                        new UpdateKriteriaWithSubKriteriaTask().execute(new KriteriaWithSubKriteria(newKriteria, subKriteriaList));
+                        // Validasi tambahan untuk memastikan format DECIMAL(5,2)
+                        try {
+                            double bobotCheck = Double.parseDouble(bobotStr);
+                            if (bobotCheck > 999.99) {
+                                Toast.makeText(this, "Bobot melebihi batas maksimal (999.99)", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+                        } catch (NumberFormatException e) {
+                            Toast.makeText(this, "Format bobot tidak valid!", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        List<SubKriteriaModel> subKriteriaList = subKriteriaAdapter.getSubKriteriaList();
+                        if (subKriteriaList.isEmpty()) {
+                            Toast.makeText(this, "Minimal harus ada 1 sub kriteria!", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        KriteriaModel newKriteria = new KriteriaModel(
+                                kriteria != null ? kriteria.getId_kriteria() : null,
+                                namaKriteria,
+                                nilaiStr,
+                                bobotStr
+                        );
+
+                        if (kriteria == null) {
+                            // Add new kriteria with sub kriteria
+                            new AddKriteriaWithSubKriteriaTask().execute(new KriteriaWithSubKriteria(newKriteria, subKriteriaList));
+                        } else {
+                            // Update kriteria with sub kriteria
+                            new UpdateKriteriaWithSubKriteriaTask().execute(new KriteriaWithSubKriteria(newKriteria, subKriteriaList));
+                        }
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(this, "Nilai harus berupa angka!", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Batal", null)
                 .show();
-    }
-
-    private void initializeDefaultSubKriteria(SubKriteriaAdapter adapter) {
-        String[] klasifikasi = SubKriteriaModel.getAllKlasifikasi();
-        for (String klas : klasifikasi) {
-            SubKriteriaModel subKriteria = new SubKriteriaModel(
-                    null, null, klas, SubKriteriaModel.getBobotByKlasifikasi(klas)
-            );
-            adapter.addSubKriteria(subKriteria);
-        }
     }
 
     private void loadSubKriteriaForEdit(SubKriteriaAdapter adapter, String kriteriaId) {
@@ -460,37 +529,42 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
     private void showSubKriteriaFormDialog(SubKriteriaModel subKriteria, int position, SubKriteriaAdapter adapter) {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_subkriteria_form, null);
 
-        Spinner spinnerKlasifikasi = dialogView.findViewById(R.id.spinnerKlasifikasi);
-        TextView tvBobot = dialogView.findViewById(R.id.tvBobotSubKriteria);
-
-        // Setup spinner
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, SubKriteriaModel.getAllKlasifikasi());
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerKlasifikasi.setAdapter(spinnerAdapter);
-
-        spinnerKlasifikasi.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-                String selectedKlasifikasi = parent.getItemAtPosition(pos).toString();
-                int bobot = SubKriteriaModel.getBobotByKlasifikasi(selectedKlasifikasi);
-                tvBobot.setText("Bobot: " + bobot);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
+        EditText etKlasifikasi = dialogView.findViewById(R.id.etKlasifikasi);
+        EditText etBobotSubKriteria = dialogView.findViewById(R.id.etBobotSubKriteria);
 
         // Fill data if editing
         if (subKriteria != null) {
-            String[] klasifikasiArray = SubKriteriaModel.getAllKlasifikasi();
-            for (int i = 0; i < klasifikasiArray.length; i++) {
-                if (klasifikasiArray[i].equals(subKriteria.getKlasifikasi())) {
-                    spinnerKlasifikasi.setSelection(i);
-                    break;
+            etKlasifikasi.setText(subKriteria.getKlasifikasi());
+            etBobotSubKriteria.setText(String.valueOf(subKriteria.getBobot_sub_kriteria()));
+        }
+
+        // Add TextWatcher for bobot validation
+        etBobotSubKriteria.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String bobotStr = s.toString().trim();
+                if (!bobotStr.isEmpty()) {
+                    try {
+                        int bobot = Integer.parseInt(bobotStr);
+                        if (bobot > 100) {
+                            etBobotSubKriteria.setError("Bobot maksimal adalah 100");
+                        } else if (bobot < 1) {
+                            etBobotSubKriteria.setError("Bobot minimal adalah 1");
+                        } else {
+                            etBobotSubKriteria.setError(null);
+                        }
+                    } catch (NumberFormatException e) {
+                        etBobotSubKriteria.setError("Bobot harus berupa angka");
+                    }
                 }
             }
-        }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
 
         String dialogTitle = subKriteria == null ? "Tambah Sub Kriteria" : "Edit Sub Kriteria";
 
@@ -498,22 +572,43 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
         builder.setView(dialogView)
                 .setTitle(dialogTitle)
                 .setPositiveButton("Simpan", (dialog, which) -> {
-                    String selectedKlasifikasi = spinnerKlasifikasi.getSelectedItem().toString();
-                    int bobot = SubKriteriaModel.getBobotByKlasifikasi(selectedKlasifikasi);
+                    String klasifikasi = etKlasifikasi.getText().toString().trim();
+                    String bobotStr = etBobotSubKriteria.getText().toString().trim();
 
-                    SubKriteriaModel newSubKriteria = new SubKriteriaModel(
-                            subKriteria != null ? subKriteria.getId_subkriteria() : null,
-                            subKriteria != null ? subKriteria.getId_kriteria() : null,
-                            selectedKlasifikasi,
-                            bobot
-                    );
+                    // Validation
+                    if (klasifikasi.isEmpty()) {
+                        Toast.makeText(this, "Klasifikasi harus diisi!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
 
-                    if (position == -1) {
-                        // Add new
-                        adapter.addSubKriteria(newSubKriteria);
-                    } else {
-                        // Update existing
-                        adapter.updateSubKriteria(newSubKriteria, position);
+                    if (bobotStr.isEmpty()) {
+                        Toast.makeText(this, "Bobot harus diisi!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    try {
+                        int bobot = Integer.parseInt(bobotStr);
+                        if (bobot < 1 || bobot > 100) {
+                            Toast.makeText(this, "Bobot harus antara 1-100!", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+
+                        SubKriteriaModel newSubKriteria = new SubKriteriaModel(
+                                subKriteria != null ? subKriteria.getId_subkriteria() : null,
+                                subKriteria != null ? subKriteria.getId_kriteria() : null,
+                                klasifikasi,
+                                bobot
+                        );
+
+                        if (position == -1) {
+                            // Add new
+                            adapter.addSubKriteria(newSubKriteria);
+                        } else {
+                            // Update existing
+                            adapter.updateSubKriteria(newSubKriteria, position);
+                        }
+                    } catch (NumberFormatException e) {
+                        Toast.makeText(this, "Bobot harus berupa angka!", Toast.LENGTH_SHORT).show();
                     }
                 })
                 .setNegativeButton("Batal", null)
@@ -560,6 +655,7 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
                         KriteriaModel kriteria = new KriteriaModel(
                                 rs.getString("id_kriteria"),
                                 rs.getString("nama_kriteria"),
+                                rs.getString("nilai"),
                                 rs.getString("bobot")
                         );
                         kriterias.add(kriteria);
@@ -640,10 +736,11 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
                     conn.setAutoCommit(false);
 
                     // Insert kriteria
-                    String kriteriaQuery = "INSERT INTO tb_kriteria (nama_kriteria, bobot) VALUES (?, ?)";
+                    String kriteriaQuery = "INSERT INTO tb_kriteria (nama_kriteria, nilai, bobot) VALUES (?, ?, ?)";
                     PreparedStatement psKriteria = conn.prepareStatement(kriteriaQuery, PreparedStatement.RETURN_GENERATED_KEYS);
                     psKriteria.setString(1, data.kriteria.getNama_kriteria());
-                    psKriteria.setString(2, data.kriteria.getBobot());
+                    psKriteria.setString(2, data.kriteria.getNilai());
+                    psKriteria.setString(3, data.kriteria.getBobot());
 
                     int affectedRows = psKriteria.executeUpdate();
                     if (affectedRows > 0) {
@@ -668,7 +765,7 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
                             // Commit transaction
                             conn.commit();
 
-                            return new KriteriaModel(kriteriaId, data.kriteria.getNama_kriteria(), data.kriteria.getBobot());
+                            return new KriteriaModel(kriteriaId, data.kriteria.getNama_kriteria(), data.kriteria.getNilai(), data.kriteria.getBobot());
                         }
                     }
                 }
@@ -722,11 +819,12 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
                     conn.setAutoCommit(false);
 
                     // Update kriteria
-                    String kriteriaQuery = "UPDATE tb_kriteria SET nama_kriteria=?, bobot=? WHERE id_kriteria=?";
+                    String kriteriaQuery = "UPDATE tb_kriteria SET nama_kriteria=?, nilai=?, bobot=? WHERE id_kriteria=?";
                     PreparedStatement psKriteria = conn.prepareStatement(kriteriaQuery);
                     psKriteria.setString(1, data.kriteria.getNama_kriteria());
-                    psKriteria.setString(2, data.kriteria.getBobot());
-                    psKriteria.setString(3, data.kriteria.getId_kriteria());
+                    psKriteria.setString(2, data.kriteria.getNilai());
+                    psKriteria.setString(3, data.kriteria.getBobot());
+                    psKriteria.setString(4, data.kriteria.getId_kriteria());
 
                     int affectedRows = psKriteria.executeUpdate();
                     if (affectedRows > 0) {

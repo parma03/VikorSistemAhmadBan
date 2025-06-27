@@ -56,13 +56,17 @@ public class MainAdminActivity extends AppCompatActivity {
              startActivity(intent);
         });
 
+        binding.cardDataSubKriteria.setOnClickListener(v -> {
+            Intent intent = new Intent(MainAdminActivity.this, DataKriteriaActivity.class);
+            startActivity(intent);
+        });
+
         // Dropdown menu items click listeners
         binding.menuProfile.setOnClickListener(v -> {
             hideDropdownMenu();
             // Intent ke ProfileSettingActivity
             // Intent intent = new Intent(MainAdminActivity.this, ProfileSettingActivity.class);
             // startActivity(intent);
-            // MEMEK
         });
 
         binding.menuLogout.setOnClickListener(v -> {
