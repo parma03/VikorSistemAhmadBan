@@ -331,7 +331,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Data Kriteria"
+                            android:text="Data Kriteria/Sub"
                             android:textColor="@android:color/white"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -340,7 +340,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Kelola Kriteria"
+                            android:text="Kelola Kriteria/Sub"
                             android:textColor="@android:color/white"
                             android:textSize="12sp"
                             android:alpha="0.8" />
@@ -350,7 +350,7 @@
                 </androidx.cardview.widget.CardView>
 
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/cardDataSubKriteria"
+                    android:id="@+id/cardDataProcessing"
                     android:layout_width="0dp"
                     android:layout_height="140dp"
                     android:layout_columnWeight="1"
@@ -378,7 +378,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Data SubKriteria"
+                            android:text="Data Procesing"
                             android:textColor="@android:color/white"
                             android:textSize="16sp"
                             android:textStyle="bold" />
@@ -387,7 +387,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Kelola SubKriteria"
+                            android:text="Kelola Procesing"
                             android:textColor="@android:color/white"
                             android:textSize="12sp"
                             android:alpha="0.8" />

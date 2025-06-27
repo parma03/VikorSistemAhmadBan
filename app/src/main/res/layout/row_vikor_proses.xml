@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="4dp">
+
+    <!-- Background Actions (Hidden by default) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <!-- Update Action (Right Swipe) -->
+        <LinearLayout
+            android:id="@+id/updateAction"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:background="@color/success_green"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@mipmap/ic_edit_foreground"
+                app:tint="@color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Edit"
+                android:textColor="@color/white"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+        <!-- Spacer -->
+        <View
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <!-- Delete Action (Left Swipe) -->
+        <LinearLayout
+            android:id="@+id/deleteAction"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:background="@color/error_red"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@mipmap/ic_delete_foreground"
+                app:tint="@color/white" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Hapus"
+                android:textColor="@color/white"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Foreground Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/foregroundCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="4dp"
+        app:cardUseCompatPadding="true"
+        app:strokeWidth="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp">
+
+            <!-- Tire Image -->
+            <FrameLayout
+                android:layout_width="80dp"
+                android:layout_height="80dp">
+
+                <ImageView
+                    android:id="@+id/ivFotoBan"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/circle_background"
+                    android:padding="8dp"
+                    android:scaleType="centerCrop"
+                    android:src="@mipmap/ic_tire_foreground" />
+
+            </FrameLayout>
+
+            <!-- Tire Info -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <!-- Tire Name -->
+                <TextView
+                    android:id="@+id/tvNamaBan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nama Ban"
+                    android:textColor="@color/textColor"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <!-- Tire ID -->
+                <TextView
+                    android:id="@+id/tvIdProses"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="ID: 001"
+                    android:textColor="@color/text_hint"
+                    android:textSize="11sp" />
+
+                <!-- Date and Status Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <!-- Date Created -->
+                    <TextView
+                        android:id="@+id/tvCreatedAt"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="12 Jan 2024"
+                        android:textColor="@color/textColor"
+                        android:textSize="15sp"
+                        android:drawableStart="@android:drawable/ic_menu_recent_history"
+                        android:drawablePadding="4dp"
+                        android:drawableTint="@color/text_secondary" />
+
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Arrow Icon -->
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="8dp"
+                android:src="@mipmap/ic_swipe_foreground"
+                app:tint="@color/text_hint" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>

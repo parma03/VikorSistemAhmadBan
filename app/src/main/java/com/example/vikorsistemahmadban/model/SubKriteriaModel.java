@@ -48,27 +48,4 @@ public class SubKriteriaModel {
     public void setBobot_sub_kriteria(int bobot_sub_kriteria) {
         this.bobot_sub_kriteria = bobot_sub_kriteria;
     }
-
-    // Static method untuk mendapatkan bobot berdasarkan klasifikasi
-    public static int getBobotByKlasifikasi(String klasifikasi) {
-        switch (klasifikasi) {
-            case "Sangat Baik":
-                return 50;
-            case "Baik":
-                return 40;
-            case "Cukup":
-                return 30;
-            case "Buruk":
-                return 20;
-            case "Sangat Buruk":
-                return 10;
-            default:
-                return 0;
-        }
-    }
-
-    // Static method untuk mendapatkan semua klasifikasi
-    public static String[] getAllKlasifikasi() {
-        return new String[]{"Sangat Baik", "Baik", "Cukup", "Buruk", "Sangat Buruk"};
-    }
 }

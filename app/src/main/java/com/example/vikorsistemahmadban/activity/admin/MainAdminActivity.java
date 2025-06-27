@@ -56,8 +56,13 @@ public class MainAdminActivity extends AppCompatActivity {
              startActivity(intent);
         });
 
-        binding.cardDataSubKriteria.setOnClickListener(v -> {
-            Intent intent = new Intent(MainAdminActivity.this, DataKriteriaActivity.class);
+        binding.cardDataProcessing.setOnClickListener(v -> {
+            Intent intent = new Intent(MainAdminActivity.this, VikorProcesActivity.class);
+            startActivity(intent);
+        });
+
+        binding.cardDataVikor.setOnClickListener(v -> {
+            Intent intent = new Intent(MainAdminActivity.this, VikorProcesActivity.class);
             startActivity(intent);
         });
 
