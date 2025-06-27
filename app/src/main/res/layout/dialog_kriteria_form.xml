@@ -39,28 +39,86 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Bobot Field -->
+            <!-- Nilai Field -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:hint="Bobot"
+                android:hint="Nilai (Maksimal 400)"
                 app:boxCornerRadiusBottomEnd="8dp"
                 app:boxCornerRadiusBottomStart="8dp"
                 app:boxCornerRadiusTopEnd="8dp"
                 app:boxCornerRadiusTopStart="8dp"
                 app:startIconDrawable="@android:drawable/ic_menu_send"
-                app:startIconTint="@color/text_secondary">
+                app:startIconTint="@color/text_secondary"
+                app:helperText="Nilai akan dihitung sebagai bobot (Nilai/400)">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etBobot"
+                    android:id="@+id/etNilai"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="numberDecimal"
+                    android:inputType="number"
                     android:textColor="@color/textColor"
-                    android:maxLength="10" />
+                    android:maxLength="3"
+                    android:hint="000" />
 
             </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Bobot Display Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvBobotLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bobot (Auto calculated from Nilai/400):"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@android:drawable/ic_menu_compass"
+                        app:tint="@color/text_secondary"
+                        android:layout_marginEnd="12dp" />
+
+                    <TextView
+                        android:id="@+id/tvBobot"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="0.0000"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:padding="12dp"
+                        android:gravity="center" />
+
+                </LinearLayout>
+
+                <!-- Info Text -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bobot akan otomatis dihitung ketika Anda memasukkan nilai"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp"
+                    android:textStyle="italic"
+                    android:layout_marginTop="8dp" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
