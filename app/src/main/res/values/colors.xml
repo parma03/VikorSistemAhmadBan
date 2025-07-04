@@ -34,4 +34,14 @@
     <color name="error_red">#F44336</color>
     <color name="success_green">#4CAF50</color>
     <color name="warning_orange">#FF9800</color>
+
+    <!-- Trophy colors -->
+    <color name="gold">#FFD700</color>
+    <color name="silver">#C0C0C0</color>
+    <color name="bronze">#CD7F32</color>
+
+    <!-- Trophy gradient colors -->
+    <color name="gold_light">#FFF8DC</color>
+    <color name="silver_light">#F5F5F5</color>
+    <color name="bronze_light">#DEB887</color>
 </resources>

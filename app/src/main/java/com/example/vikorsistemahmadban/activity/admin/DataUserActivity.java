@@ -405,7 +405,7 @@ public class DataUserActivity extends AppCompatActivity implements UserAdapter.O
         // Setup spinner
         ArrayAdapter<String> roleAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item,
-                new String[]{"admin", "pimpinan"});
+                new String[]{"admin", "pengguna", "pimpinan"});
         roleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerRole.setAdapter(roleAdapter);
 
@@ -446,7 +446,7 @@ public class DataUserActivity extends AppCompatActivity implements UserAdapter.O
             }
 
             // Set spinner selection
-            String[] roles = {"admin", "pimpinan"};
+            String[] roles = {"admin", "pengguna", "pimpinan"};
             for (int i = 0; i < roles.length; i++) {
                 if (roles[i].equals(user.getRole())) {
                     spinnerRole.setSelection(i);
@@ -534,13 +534,16 @@ public class DataUserActivity extends AppCompatActivity implements UserAdapter.O
                             "CASE " +
                             "WHEN u.role = 'admin' THEN a.nama " +
                             "WHEN u.role = 'pimpinan' THEN p.nama " +
+                            "WHEN u.role = 'pengguna' THEN pg.nama " +
                             "END as nama_user, " +
                             "CASE " +
                             "WHEN u.role = 'admin' THEN a.profile " +
                             "WHEN u.role = 'pimpinan' THEN p.profile " +
+                            "WHEN u.role = 'pengguna' THEN pg.profile " +
                             "END as profile_user " +
                             "FROM tb_user u " +
                             "LEFT JOIN tb_admin a ON u.id_user = a.id_user " +
+                            "LEFT JOIN tb_pengguna a ON u.id_user = pg.id_user " +
                             "LEFT JOIN tb_pimpinan p ON u.id_user = p.id_user ";
 
                     PreparedStatement ps = conn.prepareStatement(query);
@@ -611,6 +614,9 @@ public class DataUserActivity extends AppCompatActivity implements UserAdapter.O
                                     break;
                                 case "pimpinan":
                                     roleTable = "tb_pimpinan";
+                                    break;
+                                case "pengguna":
+                                    roleTable = "tb_pengguna";
                                     break;
                                 default:
                                     roleTable = "tb_admin";
@@ -683,6 +689,9 @@ public class DataUserActivity extends AppCompatActivity implements UserAdapter.O
                                 break;
                             case "pimpinan":
                                 roleTable = "tb_pimpinan";
+                                break;
+                            case "pengguna":
+                                roleTable = "tb_pengguna";
                                 break;
                             default:
                                 roleTable = "tb_admin";

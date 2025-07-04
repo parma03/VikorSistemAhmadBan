@@ -39,6 +39,31 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Jenis Kriteria Field (Benefit/Cost) -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:hint="Jenis Kriteria"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusTopStart="8dp"
+                app:startIconDrawable="@android:drawable/ic_menu_sort_by_size"
+                app:startIconTint="@color/text_secondary"
+                app:helperText="Pilih apakah kriteria ini benefit (semakin tinggi semakin baik) atau cost (semakin rendah semakin baik)"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+
+                <AutoCompleteTextView
+                    android:id="@+id/spinnerJenisKriteria"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none"
+                    android:textColor="@color/textColor"
+                    android:hint="Pilih jenis kriteria" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
             <!-- Nilai Field -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"

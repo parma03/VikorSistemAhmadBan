@@ -449,13 +449,13 @@
 
             </GridLayout>
 
-            <!-- Quick Stats Section -->
+            <!-- Quick Stats Section - Top 3 VIKOR Rankings -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:layout_marginBottom="16dp"
-                android:text="Quick Statistics"
+                android:text="Top 3 VIKOR Rankings"
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -474,6 +474,7 @@
                     android:orientation="horizontal"
                     android:padding="20dp">
 
+                    <!-- Ranking 1 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -481,20 +482,40 @@
                         android:gravity="center"
                         android:orientation="vertical">
 
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_marginBottom="4dp"
+                            android:src="@drawable/ic_trophy_gold"
+                            app:tint="@color/gold" />
+
                         <TextView
+                            android:id="@+id/tv_rank1_name"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="125"
-                            android:textColor="@color/primary_blue"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
+                            android:text="Loading..."
+                            android:textColor="@color/gold"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:maxLines="2"
+                            android:ellipsize="end"
+                            android:gravity="center" />
+
+                        <TextView
+                            android:id="@+id/tv_rank1_score"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.0000"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp"
+                            android:layout_marginTop="2dp" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Total Users"
+                            android:text="Rank #1"
                             android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
+                            android:textSize="10sp" />
 
                     </LinearLayout>
 
@@ -503,6 +524,7 @@
                         android:layout_height="match_parent"
                         android:background="@color/divider" />
 
+                    <!-- Ranking 2 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -510,20 +532,40 @@
                         android:gravity="center"
                         android:orientation="vertical">
 
+                        <ImageView
+                            android:layout_width="22dp"
+                            android:layout_height="22dp"
+                            android:layout_marginBottom="4dp"
+                            android:src="@drawable/ic_trophy_silver"
+                            app:tint="@color/silver" />
+
                         <TextView
+                            android:id="@+id/tv_rank2_name"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="8"
-                            android:textColor="@color/card_ban"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
+                            android:text="Loading..."
+                            android:textColor="@color/silver"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:maxLines="2"
+                            android:ellipsize="end"
+                            android:gravity="center" />
+
+                        <TextView
+                            android:id="@+id/tv_rank2_score"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.0000"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp"
+                            android:layout_marginTop="2dp" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Active Bans"
+                            android:text="Rank #2"
                             android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
+                            android:textSize="10sp" />
 
                     </LinearLayout>
 
@@ -532,6 +574,7 @@
                         android:layout_height="match_parent"
                         android:background="@color/divider" />
 
+                    <!-- Ranking 3 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -539,20 +582,40 @@
                         android:gravity="center"
                         android:orientation="vertical">
 
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginBottom="4dp"
+                            android:src="@drawable/ic_trophy_bronze"
+                            app:tint="@color/bronze" />
+
                         <TextView
+                            android:id="@+id/tv_rank3_name"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="15"
-                            android:textColor="@color/card_kriteria"
-                            android:textSize="24sp"
-                            android:textStyle="bold" />
+                            android:text="Loading..."
+                            android:textColor="@color/bronze"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:maxLines="2"
+                            android:ellipsize="end"
+                            android:gravity="center" />
+
+                        <TextView
+                            android:id="@+id/tv_rank3_score"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0.0000"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="10sp"
+                            android:layout_marginTop="2dp" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Kriteria"
+                            android:text="Rank #3"
                             android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
+                            android:textSize="10sp" />
 
                     </LinearLayout>
 

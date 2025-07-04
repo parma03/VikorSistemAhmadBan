@@ -10,8 +10,11 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,6 +55,7 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
     private KriteriaAdapter kriteriaAdapter;
     private DecimalFormat decimalFormat;
     private static final int MAX_NILAI = 400;
+    private static final String[] JENIS_KRITERIA = {"Benefit", "Cost"};
 
     // Helper class untuk mengirim data kriteria dan sub kriteria
     private static class KriteriaWithSubKriteria {
@@ -318,7 +322,7 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
         RecyclerView rvSubKriteria = dialogView.findViewById(R.id.rvSubKriteriaDetail);
 
         // Set data
-        tvNamaKriteriaDetail.setText(kriteria.getNama_kriteria());
+        tvNamaKriteriaDetail.setText(kriteria.getNama_kriteria() + "(" + kriteria.getKategori() + ")");
         tvIdKriteriaDetail.setText("ID: " + kriteria.getId_kriteria());
         tvNilaiDetail.setText(kriteria.getNilai());
         tvBobotDetail.setText(kriteria.getBobot());
@@ -376,11 +380,21 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_kriteria_form, null);
 
         EditText etNamaKriteria = dialogView.findViewById(R.id.etNamaKriteria);
+        AutoCompleteTextView spinnerJenisKriteria = dialogView.findViewById(R.id.spinnerJenisKriteria);
         EditText etNilai = dialogView.findViewById(R.id.etNilai);
         TextView etBobot = dialogView.findViewById(R.id.tvBobot);
         RecyclerView rvSubKriteria = dialogView.findViewById(R.id.rvSubKriteria);
         Button btnAddSubKriteria = dialogView.findViewById(R.id.btnAddSubKriteria);
         TextView tvBobotLabel = dialogView.findViewById(R.id.tvBobotLabel);
+
+        // Setup spinner jenis kriteria
+        ArrayAdapter<String> jenisKriteriaAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_dropdown_item_1line, JENIS_KRITERIA);
+        spinnerJenisKriteria.setAdapter(jenisKriteriaAdapter);
+
+        // Set default value
+        spinnerJenisKriteria.setText(JENIS_KRITERIA[0], false); // Default to "Benefit"
+
 
         // Show bobot calculation info
         tvBobotLabel.setText("Bobot (Auto calculated from Nilai/400):");
@@ -395,11 +409,14 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
             etNamaKriteria.setText(kriteria.getNama_kriteria());
             etNilai.setText(kriteria.getNilai());
             etBobot.setText(kriteria.getBobot());
+            spinnerJenisKriteria.setText(JENIS_KRITERIA[0], false);
+
             // Load existing sub kriteria
             loadSubKriteriaForEdit(subKriteriaAdapter, kriteria.getId_kriteria());
         } else {
             // Initialize with default sub kriteria for new kriteria
             etBobot.setText("0.00");
+            spinnerJenisKriteria.setText(JENIS_KRITERIA[0], false);
         }
 
         // Setup sub kriteria actions
@@ -462,10 +479,16 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
                 .setTitle(title)
                 .setPositiveButton("Simpan", (dialog, which) -> {
                     String namaKriteria = etNamaKriteria.getText().toString().trim();
+                    String jenisKriteria = spinnerJenisKriteria.getText().toString().trim();
                     String nilaiStr = etNilai.getText().toString().trim();
 
                     if (namaKriteria.isEmpty() || nilaiStr.isEmpty()) {
                         Toast.makeText(this, "Nama Kriteria dan Nilai harus diisi!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (!jenisKriteria.equals("Benefit") && !jenisKriteria.equals("Cost")) {
+                        Toast.makeText(this, "Jenis kriteria harus Benefit atau Cost!", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
@@ -500,6 +523,7 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
                         KriteriaModel newKriteria = new KriteriaModel(
                                 kriteria != null ? kriteria.getId_kriteria() : null,
                                 namaKriteria,
+                                jenisKriteria,
                                 nilaiStr,
                                 bobotStr
                         );
@@ -652,6 +676,7 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
                         KriteriaModel kriteria = new KriteriaModel(
                                 rs.getString("id_kriteria"),
                                 rs.getString("nama_kriteria"),
+                                rs.getString("kategori"),
                                 rs.getString("nilai"),
                                 rs.getString("bobot")
                         );
@@ -733,12 +758,12 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
                     conn.setAutoCommit(false);
 
                     // Insert kriteria
-                    String kriteriaQuery = "INSERT INTO tb_kriteria (nama_kriteria, nilai, bobot) VALUES (?, ?, ?)";
+                    String kriteriaQuery = "INSERT INTO tb_kriteria (nama_kriteria, kategori, nilai, bobot) VALUES (?, ?, ?, ?)";
                     PreparedStatement psKriteria = conn.prepareStatement(kriteriaQuery, PreparedStatement.RETURN_GENERATED_KEYS);
                     psKriteria.setString(1, data.kriteria.getNama_kriteria());
-                    psKriteria.setString(2, data.kriteria.getNilai());
-                    psKriteria.setString(3, data.kriteria.getBobot());
-
+                    psKriteria.setString(2, data.kriteria.getKategori());
+                    psKriteria.setString(3, data.kriteria.getNilai());
+                    psKriteria.setString(4, data.kriteria.getBobot());
                     int affectedRows = psKriteria.executeUpdate();
                     if (affectedRows > 0) {
                         // Get generated kriteria ID
@@ -762,7 +787,8 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
                             // Commit transaction
                             conn.commit();
 
-                            return new KriteriaModel(kriteriaId, data.kriteria.getNama_kriteria(), data.kriteria.getNilai(), data.kriteria.getBobot());
+                            return new KriteriaModel(kriteriaId, data.kriteria.getNama_kriteria(),
+                                    data.kriteria.getKategori(), data.kriteria.getNilai(), data.kriteria.getBobot());
                         }
                     }
                 }
@@ -816,12 +842,13 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
                     conn.setAutoCommit(false);
 
                     // Update kriteria
-                    String kriteriaQuery = "UPDATE tb_kriteria SET nama_kriteria=?, nilai=?, bobot=? WHERE id_kriteria=?";
+                    String kriteriaQuery = "UPDATE tb_kriteria SET nama_kriteria=?, kategori=?, nilai=?, bobot=? WHERE id_kriteria=?";
                     PreparedStatement psKriteria = conn.prepareStatement(kriteriaQuery);
                     psKriteria.setString(1, data.kriteria.getNama_kriteria());
-                    psKriteria.setString(2, data.kriteria.getNilai());
-                    psKriteria.setString(3, data.kriteria.getBobot());
-                    psKriteria.setString(4, data.kriteria.getId_kriteria());
+                    psKriteria.setString(2, data.kriteria.getKategori());
+                    psKriteria.setString(3, data.kriteria.getNilai());
+                    psKriteria.setString(4, data.kriteria.getBobot());
+                    psKriteria.setString(5, data.kriteria.getId_kriteria());
 
                     int affectedRows = psKriteria.executeUpdate();
                     if (affectedRows > 0) {

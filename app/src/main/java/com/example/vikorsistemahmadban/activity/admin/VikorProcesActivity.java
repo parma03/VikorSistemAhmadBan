@@ -914,11 +914,25 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
         BanModel banData = findBanById(proses.getId_ban());
         String banName = banData != null ? banData.getNama_ban() : "Ban ID: " + proses.getId_ban();
 
+        // Format date for display
+        String displayDate = proses.getCreated_at();
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            SimpleDateFormat outputFormat = new SimpleDateFormat("dd MMMM yyyy", Locale.getDefault());
+            Date date = inputFormat.parse(proses.getCreated_at());
+            displayDate = outputFormat.format(date);
+        } catch (Exception e) {
+            // Keep original format if parsing fails
+        }
+
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
-        builder.setTitle("Konfirmasi Hapus")
-                .setMessage("Apakah Anda yakin ingin menghapus proses untuk \"" + banName + "\"?")
-                .setPositiveButton("Hapus", (dialog, which) -> {
-                    new DeleteProsesTask().execute(proses.getId_proses());
+        builder.setTitle("Konfirmasi Hapus Semua Data")
+                .setMessage("Apakah Anda yakin ingin menghapus SEMUA data proses untuk:\n\n" +
+                        "Ban: \"" + banName + "\"\n" +
+                        "Tanggal: " + displayDate + "\n\n" +
+                        "Tindakan ini akan menghapus semua kriteria yang terkait dengan ban ini pada tanggal tersebut.")
+                .setPositiveButton("Hapus Semua", (dialog, which) -> {
+                    new DeleteProsesTask().execute(proses);
                 })
                 .setNegativeButton("Batal", null)
                 .setIcon(R.mipmap.ic_delete_foreground)
@@ -994,6 +1008,7 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
                 KriteriaModel kriteria = new KriteriaModel(
                         rs.getString("id_kriteria"),
                         rs.getString("nama_kriteria"),
+                        rs.getString("kategori"),
                         rs.getString("nilai"),
                         rs.getString("bobot")
                 );
@@ -1097,18 +1112,36 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
     }
 
     // AsyncTask untuk Delete Proses
-    private class DeleteProsesTask extends AsyncTask<String, Void, Boolean> {
+    private class DeleteProsesTask extends AsyncTask<ProsesModel, Void, Boolean> {
+        private String banName;
+        private String deletedDate;
+
         @Override
-        protected Boolean doInBackground(String... prosesIds) {
+        protected Boolean doInBackground(ProsesModel... prosesModels) {
+            if (prosesModels.length == 0) return false;
+
+            ProsesModel proses = prosesModels[0];
             Connection conn = null;
             try {
                 conn = jdbcConnection.getConnection();
                 if (conn != null) {
-                    String query = "DELETE FROM tb_proses WHERE id_proses = ?";
+                    // Get ban name for feedback
+                    BanModel banData = findBanById(proses.getId_ban());
+                    banName = banData != null ? banData.getNama_ban() : "Ban ID: " + proses.getId_ban();
+                    deletedDate = proses.getCreated_at();
+
+                    // Delete all records for this ban and date
+                    String query = "DELETE FROM tb_proses WHERE id_ban = ? AND DATE(created_at) = DATE(?)";
                     PreparedStatement ps = conn.prepareStatement(query);
-                    ps.setString(1, prosesIds[0]);
-                    int result = ps.executeUpdate();
-                    return result > 0;
+                    ps.setString(1, proses.getId_ban());
+                    ps.setString(2, proses.getCreated_at());
+
+                    int deletedCount = ps.executeUpdate();
+
+                    // Log for debugging
+                    System.out.println("Deleted " + deletedCount + " records for ban: " + banName + " on date: " + deletedDate);
+
+                    return deletedCount > 0;
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -1121,10 +1154,10 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
         @Override
         protected void onPostExecute(Boolean success) {
             if (success) {
-                showSuccessSnackbar("Proses berhasil dihapus");
+                showSuccessSnackbar("Semua data proses untuk \"" + banName + "\" berhasil dihapus");
                 loadInitialData(); // Reload data
             } else {
-                Toast.makeText(VikorProcesActivity.this, "Gagal menghapus proses", Toast.LENGTH_SHORT).show();
+                Toast.makeText(VikorProcesActivity.this, "Gagal menghapus data proses", Toast.LENGTH_SHORT).show();
             }
         }
     }
