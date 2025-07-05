@@ -15,7 +15,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.vikorsistemahmadban.activity.admin.DataUserActivity;
 import com.example.vikorsistemahmadban.activity.admin.MainAdminActivity;
+import com.example.vikorsistemahmadban.activity.pengguna.MainPenggunaActivity;
 import com.example.vikorsistemahmadban.activity.pimpinan.MainPimpinanActivity;
 import com.example.vikorsistemahmadban.api.JDBCConnection;
 import com.example.vikorsistemahmadban.api.PrefManager;
@@ -59,6 +61,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 performLogin();
+            }
+        });
+
+        binding.btnRegister.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
+                startActivity(intent);
             }
         });
     }
@@ -299,6 +309,9 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case "pimpinan":
                 intent = new Intent(MainActivity.this, MainPimpinanActivity.class);
+                break;
+            case "pengguna":
+                intent = new Intent(MainActivity.this, MainPenggunaActivity.class);
                 break;
             default:
                 showErrorAlert("Role tidak valid: " + role);

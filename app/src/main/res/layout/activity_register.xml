@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5E6E0"
+    tools:context=".RegisterActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Background Image -->
+            <ImageView
+                android:id="@+id/imageView2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scaleType="fitXY"
+                app:srcCompat="@drawable/top_background2" />
+
+            <!-- Title -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="32dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginRight="32dp"
+                android:text="Buat\nAkun Baru"
+                android:textColor="#EA6D35"
+                android:textSize="40sp"
+                android:textStyle="bold" />
+
+            <!-- Subtitle -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="32dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginRight="32dp"
+                android:layout_marginBottom="24dp"
+                android:text="Silakan isi data di bawah untuk membuat akun"
+                android:textColor="#666666"
+                android:textSize="16sp" />
+
+            <!-- Full Name Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/teFullName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/edittext_background"
+                android:hint="Nama Lengkap"
+                app:boxStrokeColor="#EA6D35"
+                app:boxStrokeWidth="2dp"
+                app:hintTextColor="#EA6D35"
+                app:startIconDrawable="@drawable/name"
+                app:startIconTint="#EA6D35">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etFullName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPersonName|textCapWords"
+                    android:padding="18dp"
+                    android:textColor="@color/textColor"
+                    android:textSize="16sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Username Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/edittext_background"
+                android:hint="Username"
+                app:boxStrokeColor="#EA6D35"
+                app:boxStrokeWidth="2dp"
+                app:hintTextColor="#EA6D35"
+                app:startIconDrawable="@drawable/name"
+                app:startIconTint="#EA6D35"
+                app:helperText="Minimal 4 karakter"
+                app:helperTextTextColor="#999999">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etEmail"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:padding="18dp"
+                    android:textColor="@color/textColor"
+                    android:textSize="16sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Password Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/edittext_background"
+                android:hint="Password"
+                app:boxStrokeColor="#EA6D35"
+                app:boxStrokeWidth="2dp"
+                app:hintTextColor="#EA6D35"
+                app:passwordToggleEnabled="true"
+                app:passwordToggleTint="#EA6D35"
+                app:startIconDrawable="@drawable/password"
+                app:startIconTint="#EA6D35"
+                app:helperText="Minimal 6 karakter"
+                app:helperTextTextColor="#999999">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:padding="18dp"
+                    android:textColor="@color/textColor"
+                    android:textSize="16sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Confirm Password Input -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilConfirmPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/edittext_background"
+                android:hint="Konfirmasi Password"
+                app:boxStrokeColor="#EA6D35"
+                app:boxStrokeWidth="2dp"
+                app:hintTextColor="#EA6D35"
+                app:passwordToggleEnabled="true"
+                app:passwordToggleTint="#EA6D35"
+                app:startIconDrawable="@drawable/password"
+                app:startIconTint="#EA6D35"
+                app:helperText="Masukkan password yang sama"
+                app:helperTextTextColor="#999999">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etConfirmPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:padding="18dp"
+                    android:textColor="@color/textColor"
+                    android:textSize="16sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Register Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnRegister"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                android:layout_marginBottom="16dp"
+                android:backgroundTint="#EA6D35"
+                android:text="Daftar Sekarang"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"
+                app:elevation="4dp"
+                app:iconTint="#FFFFFF"
+                app:iconGravity="textStart" />
+
+            <!-- Divider -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                android:layout_marginBottom="16dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#DDDDDD" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:text="atau"
+                    android:textColor="#999999"
+                    android:textSize="14sp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1dp"
+                    android:layout_weight="1"
+                    android:background="#DDDDDD" />
+
+            </LinearLayout>
+
+            <!-- Login Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnLogin"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                android:layout_marginBottom="32dp"
+                android:backgroundTint="@android:color/transparent"
+                android:text="Sudah Punya Akun? Login"
+                android:textColor="#EA6D35"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:cornerRadius="12dp"
+                app:strokeColor="#EA6D35"
+                app:strokeWidth="2dp"
+                app:iconTint="#EA6D35"
+                app:iconGravity="textStart" />
+
+            <!-- Footer Text -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                android:layout_marginBottom="24dp"
+                android:text="Dengan mendaftar, Anda menyetujui kebijakan privasi dan syarat layanan kami"
+                android:textColor="#999999"
+                android:textSize="12sp"
+                android:textAlignment="center"
+                android:lineSpacingExtra="2dp" />
+
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
