@@ -1,7 +1,11 @@
 package com.example.vikorsistemahmadban.activity.admin;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 
@@ -21,6 +25,7 @@ import com.example.vikorsistemahmadban.model.KriteriaModel;
 import com.example.vikorsistemahmadban.model.ProsesModel;
 import com.example.vikorsistemahmadban.model.SubKriteriaModel;
 import com.example.vikorsistemahmadban.model.VikorResultModel;
+import com.itextpdf.layout.properties.TextAlignment;
 import com.mysql.jdbc.Connection;
 
 import java.sql.PreparedStatement;
@@ -35,6 +40,36 @@ import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 
+// 3. Modifikasi DataVikorActivity.java - Tambahkan import statements
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Environment;
+import android.widget.Toast;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+// iText PDF
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.kernel.font.PdfFont;
+import com.itextpdf.kernel.font.PdfFontFactory;
+import com.itextpdf.io.font.constants.StandardFonts;
+
+// Apache POI Excel
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class DataVikorActivity extends AppCompatActivity {
     private ActivityDataVikorBinding binding;
     private VikorAdapter vikorAdapter;
@@ -44,6 +79,11 @@ public class DataVikorActivity extends AppCompatActivity {
     private List<ProsesModel> prosesList = new ArrayList<>();
     private JDBCConnection jdbcConnection;
     private DecimalFormat df = new DecimalFormat("#.####");
+    private static final int REQUEST_WRITE_PERMISSION = 1001;
+    private static final int REQUEST_STORAGE_PERMISSION = 1002;
+    private static final int REQUEST_CREATE_PDF_FILE = 1003;
+    private static final int REQUEST_CREATE_EXCEL_FILE = 1004;
+    private List<VikorResultModel> currentVikorResults = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +99,7 @@ public class DataVikorActivity extends AppCompatActivity {
 
         jdbcConnection = new JDBCConnection();
         setupRecyclerView();
+        setupExportButtons();
         loadDataAndCalculateVikor();
     }
 
@@ -243,6 +284,7 @@ public class DataVikorActivity extends AppCompatActivity {
             vikorResults.get(i).setRanking(i + 1);
         }
 
+        currentVikorResults = vikorResults;
         vikorAdapter.setVikorList(vikorResults);
     }
 
@@ -554,5 +596,624 @@ public class DataVikorActivity extends AppCompatActivity {
         sb.append("Qi = ").append(df.format(qi));
 
         return sb.toString();
+    }
+
+    private void setupExportButtons() {
+        binding.btnExportPDF.setOnClickListener(v -> {
+            if (checkPermission()) {
+                createPDFFile();
+            } else {
+                requestPermission();
+            }
+        });
+
+        binding.btnExportExcel.setOnClickListener(v -> {
+            if (checkPermission()) {
+                createExcelFile();
+            } else {
+                requestPermission();
+            }
+        });
+    }
+
+    private void createPDFFile() {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        String fileName = "VIKOR_Report_" + timestamp + ".pdf";
+
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/pdf");
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+
+        try {
+            startActivityForResult(intent, REQUEST_CREATE_PDF_FILE);
+        } catch (Exception e) {
+            // Fallback ke metode lama jika SAF tidak tersedia
+            exportToPDFLegacy();
+        }
+    }
+
+    private void createExcelFile() {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        String fileName = "VIKOR_Report_" + timestamp + ".xlsx";
+
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+
+        try {
+            startActivityForResult(intent, REQUEST_CREATE_EXCEL_FILE);
+        } catch (Exception e) {
+            // Fallback ke metode lama jika SAF tidak tersedia
+            exportToExcelLegacy();
+        }
+    }
+
+    private boolean checkPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11+ menggunakan Environment.isExternalStorageManager()
+            return Environment.isExternalStorageManager();
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // Android 6-10 menggunakan WRITE_EXTERNAL_STORAGE
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED;
+        }
+        return true;
+    }
+
+    private void requestPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11+ request manage storage permission
+            try {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, REQUEST_STORAGE_PERMISSION);
+            } catch (Exception e) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                startActivityForResult(intent, REQUEST_STORAGE_PERMISSION);
+            }
+        } else {
+            // Android 6-10 request write external storage
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_WRITE_PERMISSION);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_WRITE_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_STORAGE_PERMISSION) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (Environment.isExternalStorageManager()) {
+                    Toast.makeText(this, "Permission granted", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+                }
+            }
+        } else if (requestCode == REQUEST_CREATE_PDF_FILE && resultCode == RESULT_OK) {
+            if (data != null && data.getData() != null) {
+                Uri uri = data.getData();
+                exportToPDFWithUri(uri);
+            }
+        } else if (requestCode == REQUEST_CREATE_EXCEL_FILE && resultCode == RESULT_OK) {
+            if (data != null && data.getData() != null) {
+                Uri uri = data.getData();
+                exportToExcelWithUri(uri);
+            }
+        }
+    }
+
+    private void exportToPDFWithUri(Uri uri) {
+        try {
+            // Buka output stream dari URI
+            getContentResolver().takePersistableUriPermission(uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+            PdfWriter writer = new PdfWriter(getContentResolver().openOutputStream(uri));
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            // Font
+            PdfFont font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+            PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+
+            // Title
+            Paragraph title = new Paragraph("LAPORAN PERHITUNGAN VIKOR")
+                    .setFont(boldFont)
+                    .setFontSize(16)
+                    .setTextAlignment(TextAlignment.CENTER);
+            document.add(title);
+
+            document.add(new Paragraph("Tanggal Export: " + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(new Date()))
+                    .setFont(font)
+                    .setFontSize(10));
+
+            document.add(new Paragraph("\n"));
+
+            // Tabel Hasil Ranking
+            document.add(new Paragraph("HASIL RANKING VIKOR")
+                    .setFont(boldFont)
+                    .setFontSize(14));
+
+            Table rankingTable = new Table(6);
+            rankingTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Ranking").setFont(boldFont)));
+            rankingTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Alternatif").setFont(boldFont)));
+            rankingTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Nama Ban").setFont(boldFont)));
+            rankingTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Si").setFont(boldFont)));
+            rankingTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Ri").setFont(boldFont)));
+            rankingTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Qi").setFont(boldFont)));
+
+            for (VikorResultModel result : currentVikorResults) {
+                rankingTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(String.valueOf(result.getRanking())).setFont(font)));
+                rankingTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(result.getAlternatif()).setFont(font)));
+                rankingTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(result.getNamaBan()).setFont(font)));
+                rankingTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(df.format(result.getSiValue())).setFont(font)));
+                rankingTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(df.format(result.getRiValue())).setFont(font)));
+                rankingTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(df.format(result.getQiValue())).setFont(font)));
+            }
+
+            document.add(rankingTable);
+            document.add(new Paragraph("\n"));
+
+            // Detail Perhitungan untuk setiap alternatif
+            document.add(new Paragraph("DETAIL PERHITUNGAN VIKOR")
+                    .setFont(boldFont)
+                    .setFontSize(14));
+
+            for (VikorResultModel result : currentVikorResults) {
+                document.add(new Paragraph("\n=== " + result.getNamaBan() + " ===")
+                        .setFont(boldFont)
+                        .setFontSize(12));
+
+                // Matriks Keputusan
+                document.add(new Paragraph("1. MATRIKS KEPUTUSAN")
+                        .setFont(boldFont)
+                        .setFontSize(10));
+                document.add(new Paragraph(result.getMatriksKeputusan())
+                        .setFont(font)
+                        .setFontSize(9));
+
+                // Normalisasi
+                document.add(new Paragraph("2. NORMALISASI")
+                        .setFont(boldFont)
+                        .setFontSize(10));
+                document.add(new Paragraph(result.getNormalisasiDetail())
+                        .setFont(font)
+                        .setFontSize(9));
+
+                // Perhitungan Si
+                document.add(new Paragraph("3. PERHITUNGAN Si")
+                        .setFont(boldFont)
+                        .setFontSize(10));
+                document.add(new Paragraph(result.getPerhitunganSi())
+                        .setFont(font)
+                        .setFontSize(9));
+
+                // Perhitungan Ri
+                document.add(new Paragraph("4. PERHITUNGAN Ri")
+                        .setFont(boldFont)
+                        .setFontSize(10));
+                document.add(new Paragraph(result.getPerhitunganRi())
+                        .setFont(font)
+                        .setFontSize(9));
+
+                // Perhitungan Qi
+                document.add(new Paragraph("5. PERHITUNGAN Qi")
+                        .setFont(boldFont)
+                        .setFontSize(10));
+                document.add(new Paragraph(result.getPerhitunganQi())
+                        .setFont(font)
+                        .setFontSize(9));
+
+                document.add(new Paragraph("\n"));
+            }
+
+            document.close();
+            Toast.makeText(this, "PDF berhasil disimpan di lokasi yang dipilih", Toast.LENGTH_LONG).show();
+
+        } catch (Exception e) {
+            Log.e("ExportPDF", "Error: " + e.getMessage());
+            Toast.makeText(this, "Error saat membuat PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void exportToExcelWithUri(Uri uri) {
+        try {
+            // Buka output stream dari URI
+            getContentResolver().takePersistableUriPermission(uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+            Workbook workbook = new XSSFWorkbook();
+
+            // Sheet 1: Hasil Ranking
+            Sheet rankingSheet = workbook.createSheet("Hasil Ranking");
+            createRankingSheet(rankingSheet);
+
+            // Sheet 2: Detail Perhitungan
+            Sheet detailSheet = workbook.createSheet("Detail Perhitungan");
+            createDetailSheet(detailSheet);
+
+            // Sheet 3: Matriks Keputusan
+            Sheet matrixSheet = workbook.createSheet("Matriks Keputusan");
+            createMatrixSheet(matrixSheet);
+
+            // Simpan file ke URI yang dipilih user
+            FileOutputStream fileOut = (FileOutputStream) getContentResolver().openOutputStream(uri);
+            workbook.write(fileOut);
+            fileOut.close();
+            workbook.close();
+
+            Toast.makeText(this, "Excel berhasil disimpan di lokasi yang dipilih", Toast.LENGTH_LONG).show();
+
+        } catch (Exception e) {
+            Log.e("ExportExcel", "Error: " + e.getMessage());
+            Toast.makeText(this, "Error saat membuat Excel: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void exportToPDFLegacy() {
+        // Gunakan kode exportToPDF() yang sudah ada sebelumnya
+        exportToPDF();
+    }
+
+    private void exportToExcelLegacy() {
+        // Gunakan kode exportToExcel() yang sudah ada sebelumnya
+        exportToExcel();
+    }
+
+    private void exportToPDF() {
+        try {
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+            String fileName = "VIKOR_Report_" + timestamp + ".pdf";
+
+            File pdfFile;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Android 10+ gunakan app-specific directory
+                File documentsDir = new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "VIKOR_Reports");
+                if (!documentsDir.exists()) {
+                    documentsDir.mkdirs();
+                }
+                pdfFile = new File(documentsDir, fileName);
+            } else {
+                // Android 9 dan sebelumnya
+                File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                pdfFile = new File(downloadsDir, fileName);
+            }
+
+            // Sisa kode PDF tetap sama...
+            PdfWriter writer = new PdfWriter(new FileOutputStream(pdfFile));
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf);
+
+            // Font
+            PdfFont font = PdfFontFactory.createFont(StandardFonts.HELVETICA);
+            PdfFont boldFont = PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+
+            // Title
+            Paragraph title = new Paragraph("LAPORAN PERHITUNGAN VIKOR")
+                    .setFont(boldFont)
+                    .setFontSize(16)
+                    .setTextAlignment(TextAlignment.CENTER);
+            document.add(title);
+
+            document.add(new Paragraph("Tanggal Export: " + new SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale.getDefault()).format(new Date()))
+                    .setFont(font)
+                    .setFontSize(10));
+
+            document.add(new Paragraph("\n"));
+
+            // Tabel Hasil Ranking
+            document.add(new Paragraph("HASIL RANKING VIKOR")
+                    .setFont(boldFont)
+                    .setFontSize(14));
+
+            Table rankingTable = new Table(6);
+            rankingTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Ranking").setFont(boldFont)));
+            rankingTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Alternatif").setFont(boldFont)));
+            rankingTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Nama Ban").setFont(boldFont)));
+            rankingTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Si").setFont(boldFont)));
+            rankingTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Ri").setFont(boldFont)));
+            rankingTable.addHeaderCell(new com.itextpdf.layout.element.Cell().add(new Paragraph("Qi").setFont(boldFont)));
+
+            for (VikorResultModel result : currentVikorResults) {
+                rankingTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(String.valueOf(result.getRanking())).setFont(font)));
+                rankingTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(result.getAlternatif()).setFont(font)));
+                rankingTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(result.getNamaBan()).setFont(font)));
+                rankingTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(df.format(result.getSiValue())).setFont(font)));
+                rankingTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(df.format(result.getRiValue())).setFont(font)));
+                rankingTable.addCell(new com.itextpdf.layout.element.Cell().add(new Paragraph(df.format(result.getQiValue())).setFont(font)));
+            }
+
+            document.add(rankingTable);
+            document.add(new Paragraph("\n"));
+
+            // Detail Perhitungan untuk setiap alternatif
+            document.add(new Paragraph("DETAIL PERHITUNGAN VIKOR")
+                    .setFont(boldFont)
+                    .setFontSize(14));
+
+            for (VikorResultModel result : currentVikorResults) {
+                document.add(new Paragraph("\n=== " + result.getNamaBan() + " ===")
+                        .setFont(boldFont)
+                        .setFontSize(12));
+
+                // Matriks Keputusan
+                document.add(new Paragraph("1. MATRIKS KEPUTUSAN")
+                        .setFont(boldFont)
+                        .setFontSize(10));
+                document.add(new Paragraph(result.getMatriksKeputusan())
+                        .setFont(font)
+                        .setFontSize(9));
+
+                // Normalisasi
+                document.add(new Paragraph("2. NORMALISASI")
+                        .setFont(boldFont)
+                        .setFontSize(10));
+                document.add(new Paragraph(result.getNormalisasiDetail())
+                        .setFont(font)
+                        .setFontSize(9));
+
+                // Perhitungan Si
+                document.add(new Paragraph("3. PERHITUNGAN Si")
+                        .setFont(boldFont)
+                        .setFontSize(10));
+                document.add(new Paragraph(result.getPerhitunganSi())
+                        .setFont(font)
+                        .setFontSize(9));
+
+                // Perhitungan Ri
+                document.add(new Paragraph("4. PERHITUNGAN Ri")
+                        .setFont(boldFont)
+                        .setFontSize(10));
+                document.add(new Paragraph(result.getPerhitunganRi())
+                        .setFont(font)
+                        .setFontSize(9));
+
+                // Perhitungan Qi
+                document.add(new Paragraph("5. PERHITUNGAN Qi")
+                        .setFont(boldFont)
+                        .setFontSize(10));
+                document.add(new Paragraph(result.getPerhitunganQi())
+                        .setFont(font)
+                        .setFontSize(9));
+
+                document.add(new Paragraph("\n"));
+            }
+
+            document.close();
+
+            Toast.makeText(this, "PDF berhasil disimpan di: " + pdfFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
+
+        } catch (Exception e) {
+            Log.e("ExportPDF", "Error: " + e.getMessage());
+            Toast.makeText(this, "Error saat membuat PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void exportToExcel() {
+        try {
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+            String fileName = "VIKOR_Report_" + timestamp + ".xlsx";
+
+            File excelFile;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Android 10+ gunakan app-specific directory
+                File documentsDir = new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "VIKOR_Reports");
+                if (!documentsDir.exists()) {
+                    documentsDir.mkdirs();
+                }
+                excelFile = new File(documentsDir, fileName);
+            } else {
+                // Android 9 dan sebelumnya
+                File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                excelFile = new File(downloadsDir, fileName);
+            }
+
+            // Sisa kode Excel tetap sama...
+            Workbook workbook = new XSSFWorkbook();
+
+            // Sheet 1: Hasil Ranking
+            Sheet rankingSheet = workbook.createSheet("Hasil Ranking");
+            createRankingSheet(rankingSheet);
+
+            // Sheet 2: Detail Perhitungan
+            Sheet detailSheet = workbook.createSheet("Detail Perhitungan");
+            createDetailSheet(detailSheet);
+
+            // Sheet 3: Matriks Keputusan
+            Sheet matrixSheet = workbook.createSheet("Matriks Keputusan");
+            createMatrixSheet(matrixSheet);
+
+            // Simpan file
+            FileOutputStream fileOut = new FileOutputStream(excelFile);
+            workbook.write(fileOut);
+            fileOut.close();
+            workbook.close();
+
+            Toast.makeText(this, "Excel berhasil disimpan di: " + excelFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
+
+        } catch (Exception e) {
+            Log.e("ExportExcel", "Error: " + e.getMessage());
+            Toast.makeText(this, "Error saat membuat Excel: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void createRankingSheet(Sheet sheet) {
+        // Header
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {"Ranking", "Alternatif", "Nama Ban", "Si", "Ri", "Qi"};
+
+        CellStyle headerStyle = sheet.getWorkbook().createCellStyle();
+        Font headerFont = sheet.getWorkbook().createFont();
+        headerFont.setBold(true);
+        headerStyle.setFont(headerFont);
+
+        for (int i = 0; i < headers.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(headers[i]);
+            cell.setCellStyle(headerStyle);
+        }
+
+        // Data
+        int rowNum = 1;
+        for (VikorResultModel result : currentVikorResults) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(result.getRanking());
+            row.createCell(1).setCellValue(result.getAlternatif());
+            row.createCell(2).setCellValue(result.getNamaBan());
+            row.createCell(3).setCellValue(result.getSiValue());
+            row.createCell(4).setCellValue(result.getRiValue());
+            row.createCell(5).setCellValue(result.getQiValue());
+        }
+
+        // Manual column width setting instead of autoSizeColumn
+        // Set column widths manually (in units of 1/256th of a character width)
+        sheet.setColumnWidth(0, 2560);  // Ranking
+        sheet.setColumnWidth(1, 3840);  // Alternatif
+        sheet.setColumnWidth(2, 5120);  // Nama Ban
+        sheet.setColumnWidth(3, 2560);  // Si
+        sheet.setColumnWidth(4, 2560);  // Ri
+        sheet.setColumnWidth(5, 2560);  // Qi
+    }
+
+    private void createDetailSheet(Sheet sheet) {
+        int rowNum = 0;
+
+        // Title
+        Row titleRow = sheet.createRow(rowNum++);
+        Cell titleCell = titleRow.createCell(0);
+        titleCell.setCellValue("DETAIL PERHITUNGAN VIKOR");
+
+        CellStyle titleStyle = sheet.getWorkbook().createCellStyle();
+        Font titleFont = sheet.getWorkbook().createFont();
+        titleFont.setBold(true);
+        titleFont.setFontHeightInPoints((short) 14);
+        titleStyle.setFont(titleFont);
+        titleCell.setCellStyle(titleStyle);
+
+        rowNum++; // Empty row
+
+        for (VikorResultModel result : currentVikorResults) {
+            // Alternatif name
+            Row nameRow = sheet.createRow(rowNum++);
+            Cell nameCell = nameRow.createCell(0);
+            nameCell.setCellValue("=== " + result.getNamaBan() + " ===");
+
+            CellStyle nameStyle = sheet.getWorkbook().createCellStyle();
+            Font nameFont = sheet.getWorkbook().createFont();
+            nameFont.setBold(true);
+            nameStyle.setFont(nameFont);
+            nameCell.setCellStyle(nameStyle);
+
+            // Matriks Keputusan
+            Row matrixHeaderRow = sheet.createRow(rowNum++);
+            matrixHeaderRow.createCell(0).setCellValue("1. MATRIKS KEPUTUSAN");
+
+            String[] matrixLines = result.getMatriksKeputusan().split("\n");
+            for (String line : matrixLines) {
+                if (!line.trim().isEmpty()) {
+                    Row lineRow = sheet.createRow(rowNum++);
+                    lineRow.createCell(0).setCellValue(line);
+                }
+            }
+
+            // Normalisasi
+            Row normHeaderRow = sheet.createRow(rowNum++);
+            normHeaderRow.createCell(0).setCellValue("2. NORMALISASI");
+
+            String[] normLines = result.getNormalisasiDetail().split("\n");
+            for (String line : normLines) {
+                if (!line.trim().isEmpty()) {
+                    Row lineRow = sheet.createRow(rowNum++);
+                    lineRow.createCell(0).setCellValue(line);
+                }
+            }
+
+            // Perhitungan Si
+            Row siHeaderRow = sheet.createRow(rowNum++);
+            siHeaderRow.createCell(0).setCellValue("3. PERHITUNGAN Si");
+
+            String[] siLines = result.getPerhitunganSi().split("\n");
+            for (String line : siLines) {
+                if (!line.trim().isEmpty()) {
+                    Row lineRow = sheet.createRow(rowNum++);
+                    lineRow.createCell(0).setCellValue(line);
+                }
+            }
+
+            // Perhitungan Ri
+            Row riHeaderRow = sheet.createRow(rowNum++);
+            riHeaderRow.createCell(0).setCellValue("4. PERHITUNGAN Ri");
+
+            String[] riLines = result.getPerhitunganRi().split("\n");
+            for (String line : riLines) {
+                if (!line.trim().isEmpty()) {
+                    Row lineRow = sheet.createRow(rowNum++);
+                    lineRow.createCell(0).setCellValue(line);
+                }
+            }
+
+            // Perhitungan Qi
+            Row qiHeaderRow = sheet.createRow(rowNum++);
+            qiHeaderRow.createCell(0).setCellValue("5. PERHITUNGAN Qi");
+
+            String[] qiLines = result.getPerhitunganQi().split("\n");
+            for (String line : qiLines) {
+                if (!line.trim().isEmpty()) {
+                    Row lineRow = sheet.createRow(rowNum++);
+                    lineRow.createCell(0).setCellValue(line);
+                }
+            }
+
+            rowNum++; // Empty row between alternatives
+        }
+
+        // Set column width manually instead of autoSizeColumn
+        sheet.setColumnWidth(0, 15360); // Wider for detail text
+    }
+
+    private void createMatrixSheet(Sheet sheet) {
+        // Header
+        Row headerRow = sheet.createRow(0);
+        headerRow.createCell(0).setCellValue("Alternatif");
+
+        // Add criteria headers
+        int colNum = 1;
+        for (KriteriaModel kriteria : kriteriaList) {
+            Cell cell = headerRow.createCell(colNum++);
+            cell.setCellValue(kriteria.getNama_kriteria());
+        }
+
+        // Data dari hasil perhitungan
+        int rowNum = 1;
+        for (VikorResultModel result : currentVikorResults) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(result.getAlternatif());
+
+            // Untuk setiap kriteria, ambil nilai dari matriks keputusan
+            // Ini memerlukan parsing dari string detail perhitungan
+            // Atau lebih baik, simpan matriks keputusan sebagai data terpisah
+        }
+
+        // Set column widths manually instead of autoSizeColumn
+        sheet.setColumnWidth(0, 4096); // Alternatif column
+        for (int i = 1; i <= kriteriaList.size(); i++) {
+            sheet.setColumnWidth(i, 3072); // Criteria columns
+        }
     }
 }

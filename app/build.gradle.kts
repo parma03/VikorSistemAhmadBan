@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.vikorsistemahmadban"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -48,4 +48,8 @@ dependencies {
     implementation(libs.mysql.connector.java)
     implementation(libs.glide)
     annotationProcessor(libs.compiler)
+    implementation(libs.itext7.core)
+    implementation(libs.apache.poi)
+    implementation(libs.poi.ooxml)
+
 }
