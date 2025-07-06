@@ -1,6 +1,7 @@
 package com.example.vikorsistemahmadban.activity.admin;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -68,6 +69,12 @@ public class DataUserActivity extends AppCompatActivity implements UserAdapter.O
     private ImageView currentProfileImageView;
     private String selectedImageBase64 = "";
 
+    // Role management
+    private static final String ROLE_ADMIN = "admin";
+    private static final String ROLE_PIMPINAN = "pimpinan";
+    private static final String ROLE_PENGGUNA = "pengguna";
+    private String userRole;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,11 +89,63 @@ public class DataUserActivity extends AppCompatActivity implements UserAdapter.O
         });
 
         initializeViews();
+        getUserRole();
+        setupMenuBasedOnRole();
         setupImagePicker();
         setupCameraLauncher();
         setupRecyclerView();
         setupSearchFunctionality();
         loadUserData();
+    }
+
+    private void getUserRole() {
+        // Prioritas 1: Ambil role dari Intent yang dikirim dari LoginActivity
+        userRole = getIntent().getStringExtra("USER_ROLE");
+
+        // Prioritas 2: Jika tidak ada di Intent, ambil dari SharedPreferences
+        if (userRole == null || userRole.isEmpty()) {
+            SharedPreferences sharedPreferences = getSharedPreferences("UserSession", MODE_PRIVATE);
+            userRole = sharedPreferences.getString("USER_ROLE", "");
+        }
+
+        // Prioritas 3: Jika masih tidak ada, ambil dari PrefManager
+        if (userRole == null || userRole.isEmpty()) {
+            com.example.vikorsistemahmadban.api.PrefManager prefManager =
+                    new com.example.vikorsistemahmadban.api.PrefManager(this);
+            userRole = prefManager.getTipe();
+        }
+
+        // Default ke pengguna jika masih null
+        if (userRole == null || userRole.isEmpty()) {
+            userRole = ROLE_PENGGUNA;
+        }
+    }
+
+    private void setupMenuBasedOnRole() {
+        switch (userRole) {
+            case ROLE_PIMPINAN:
+                // Sembunyikan FAB untuk pimpinan
+                binding.fabAddUser.setVisibility(View.GONE);
+                break;
+            case ROLE_ADMIN:
+                // Admin bisa akses semua
+                binding.fabAddUser.setVisibility(View.VISIBLE);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private boolean hasEditPermission() {
+        return userRole.equals(ROLE_ADMIN);
+    }
+
+    private boolean hasDeletePermission() {
+        return userRole.equals(ROLE_ADMIN);
+    }
+
+    private boolean hasAddPermission() {
+        return userRole.equals(ROLE_ADMIN);
     }
 
     private void initializeViews() {
@@ -113,6 +172,10 @@ public class DataUserActivity extends AppCompatActivity implements UserAdapter.O
     }
 
     private void setupSwipeToRevealActions() {
+        if (userRole.equals(ROLE_PIMPINAN)) {
+            return;
+        }
+
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             private final float SWIPE_THRESHOLD = 0.3f; // 30% of item width
 
@@ -293,23 +356,41 @@ public class DataUserActivity extends AppCompatActivity implements UserAdapter.O
     // UserAdapter.OnItemClickListener implementation
     @Override
     public void onItemClick(UserModel user) {
-        showUserDetailDialog(user);
+        if (!userRole.equals(ROLE_PIMPINAN)) {
+            showUserOptionsDialog(user);
+        } else {
+            // Untuk pimpinan, langsung tampilkan detail
+            showUserDetailDialog(user);
+        }
     }
 
     @Override
     public void onItemLongClick(UserModel user) {
-        showUserOptionsDialog(user);
+        if (!userRole.equals(ROLE_PIMPINAN)) {
+            showUserOptionsDialog(user);
+        } else {
+            // Untuk pimpinan, langsung tampilkan detail
+            showUserDetailDialog(user);
+        }
     }
 
     // UserAdapter.OnSwipeActionListener implementation
     @Override
     public void onUpdateClick(UserModel user) {
-        showEditUserDialog(user);
+        if (hasEditPermission()) {
+            showEditUserDialog(user);
+        } else {
+            Toast.makeText(this, "Anda tidak memiliki permission untuk mengedit", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     public void onDeleteClick(UserModel user) {
-        showDeleteConfirmationDialog(user);
+        if (hasDeletePermission()) {
+            showDeleteConfirmationDialog(user);
+        } else {
+            Toast.makeText(this, "Anda tidak memiliki permission untuk menghapus", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showUserDetailDialog(UserModel user) {
@@ -353,12 +434,21 @@ public class DataUserActivity extends AppCompatActivity implements UserAdapter.O
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setView(dialogView)
                 .setTitle("Detail User")
-                .setPositiveButton("Tutup", null)
-                .setNeutralButton("Edit", (dialog, which) -> showEditUserDialog(user))
-                .show();
+                .setPositiveButton("Tutup", null);
+
+        // Hanya tampilkan tombol Edit jika bukan pimpinan
+        if (!userRole.equals(ROLE_PIMPINAN)) {
+            builder.setNeutralButton("Edit", (dialog, which) -> showEditUserDialog(user));
+        }
+
+        builder.show();
     }
 
     private void showUserOptionsDialog(UserModel user) {
+        if (userRole.equals(ROLE_PIMPINAN)) {
+            showUserDetailDialog(user);
+            return;
+        }
         String[] options = {"Edit User", "Delete User", "View Details"};
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
@@ -543,7 +633,7 @@ public class DataUserActivity extends AppCompatActivity implements UserAdapter.O
                             "END as profile_user " +
                             "FROM tb_user u " +
                             "LEFT JOIN tb_admin a ON u.id_user = a.id_user " +
-                            "LEFT JOIN tb_pengguna a ON u.id_user = pg.id_user " +
+                            "LEFT JOIN tb_pengguna pg ON u.id_user = pg.id_user " +
                             "LEFT JOIN tb_pimpinan p ON u.id_user = p.id_user ";
 
                     PreparedStatement ps = conn.prepareStatement(query);

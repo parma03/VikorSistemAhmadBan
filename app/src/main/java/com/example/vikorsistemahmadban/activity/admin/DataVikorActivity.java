@@ -1,6 +1,7 @@
 package com.example.vikorsistemahmadban.activity.admin;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -85,6 +86,12 @@ public class DataVikorActivity extends AppCompatActivity {
     private static final int REQUEST_CREATE_EXCEL_FILE = 1004;
     private List<VikorResultModel> currentVikorResults = new ArrayList<>();
 
+    // Role management
+    private static final String ROLE_ADMIN = "admin";
+    private static final String ROLE_PIMPINAN = "pimpinan";
+    private static final String ROLE_PENGGUNA = "pengguna";
+    private String userRole;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,9 +105,56 @@ public class DataVikorActivity extends AppCompatActivity {
         });
 
         jdbcConnection = new JDBCConnection();
+        getUserRole();
+        setupMenuBasedOnRole();
         setupRecyclerView();
         setupExportButtons();
         loadDataAndCalculateVikor();
+    }
+
+    private void getUserRole() {
+        // Prioritas 1: Ambil role dari Intent yang dikirim dari LoginActivity
+        userRole = getIntent().getStringExtra("USER_ROLE");
+
+        // Prioritas 2: Jika tidak ada di Intent, ambil dari SharedPreferences
+        if (userRole == null || userRole.isEmpty()) {
+            SharedPreferences sharedPreferences = getSharedPreferences("UserSession", MODE_PRIVATE);
+            userRole = sharedPreferences.getString("USER_ROLE", "");
+        }
+
+        // Prioritas 3: Jika masih tidak ada, ambil dari PrefManager
+        if (userRole == null || userRole.isEmpty()) {
+            com.example.vikorsistemahmadban.api.PrefManager prefManager =
+                    new com.example.vikorsistemahmadban.api.PrefManager(this);
+            userRole = prefManager.getTipe();
+        }
+
+        // Default ke pengguna jika masih null
+        if (userRole == null || userRole.isEmpty()) {
+            userRole = ROLE_PENGGUNA;
+        }
+    }
+
+    private void setupMenuBasedOnRole() {
+        switch (userRole) {
+            case ROLE_PIMPINAN:
+                // Sembunyikan FAB untuk pimpinan
+                binding.btnExportExcel.setVisibility(View.VISIBLE);
+                binding.btnExportPDF.setVisibility(View.VISIBLE);
+                break;
+            case ROLE_PENGGUNA:
+                // Sembunyikan FAB untuk pengguna
+                binding.btnExportExcel.setVisibility(View.GONE);
+                binding.btnExportPDF.setVisibility(View.GONE);
+                break;
+            case ROLE_ADMIN:
+                // Admin bisa akses semua
+                binding.btnExportExcel.setVisibility(View.VISIBLE);
+                binding.btnExportPDF.setVisibility(View.VISIBLE);
+                break;
+            default:
+                break;
+        }
     }
 
     private void setupRecyclerView() {
@@ -1106,7 +1160,7 @@ public class DataVikorActivity extends AppCompatActivity {
         titleStyle.setFont(titleFont);
         titleCell.setCellStyle(titleStyle);
 
-        rowNum++; // Empty row
+        rowNum++;
 
         for (VikorResultModel result : currentVikorResults) {
             // Alternatif name

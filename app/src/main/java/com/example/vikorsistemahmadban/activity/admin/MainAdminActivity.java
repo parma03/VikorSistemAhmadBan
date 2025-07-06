@@ -1,6 +1,7 @@
 package com.example.vikorsistemahmadban.activity.admin;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -8,6 +9,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.LinearLayout;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -44,6 +46,12 @@ public class MainAdminActivity extends AppCompatActivity {
     private JDBCConnection jdbcConnection;
     private DecimalFormat df = new DecimalFormat("#.####");
 
+    // Role management
+    private static final String ROLE_ADMIN = "admin";
+    private static final String ROLE_PIMPINAN = "pimpinan";
+    private static final String ROLE_PENGGUNA = "pengguna";
+    private String userRole;
+
     // Data untuk perhitungan VIKOR
     private List<BanModel> banList = new ArrayList<>();
     private List<KriteriaModel> kriteriaList = new ArrayList<>();
@@ -63,8 +71,79 @@ public class MainAdminActivity extends AppCompatActivity {
         });
 
         jdbcConnection = new JDBCConnection();
+        getUserRole();
+        setupMenuBasedOnRole();
         setupClickListeners();
         loadTop3VikorRankings();
+    }
+
+    private void getUserRole() {
+        // Prioritas 1: Ambil role dari Intent yang dikirim dari LoginActivity
+        userRole = getIntent().getStringExtra("USER_ROLE");
+
+        // Prioritas 2: Jika tidak ada di Intent, ambil dari SharedPreferences
+        if (userRole == null || userRole.isEmpty()) {
+            SharedPreferences sharedPreferences = getSharedPreferences("UserSession", MODE_PRIVATE);
+            userRole = sharedPreferences.getString("USER_ROLE", "");
+        }
+
+        // Prioritas 3: Jika masih tidak ada, ambil dari PrefManager
+        if (userRole == null || userRole.isEmpty()) {
+            com.example.vikorsistemahmadban.api.PrefManager prefManager =
+                    new com.example.vikorsistemahmadban.api.PrefManager(this);
+            userRole = prefManager.getTipe();
+        }
+
+        // Default ke pengguna jika masih null
+        if (userRole == null || userRole.isEmpty()) {
+            userRole = ROLE_PENGGUNA;
+        }
+    }
+
+    private void setupMenuBasedOnRole() {
+        switch (userRole) {
+            case ROLE_ADMIN:
+                // Admin bisa akses semua menu
+                binding.tvWelcome.setText("Admin Dashboard");
+                binding.cardDataUser.setVisibility(View.VISIBLE);
+                binding.cardDataBan.setVisibility(View.VISIBLE);
+                binding.cardDataKriteria.setVisibility(View.VISIBLE);
+                binding.cardDataProcessing.setVisibility(View.VISIBLE);
+                binding.cardDataVikor.setVisibility(View.VISIBLE);
+                break;
+
+            case ROLE_PIMPINAN:
+                // Pimpinan hanya bisa akses Data Ban, Data Kriteria, dan Data Vikor
+                binding.tvWelcome.setText("Pimpinan Dashboard");
+                binding.cardDataUser.setVisibility(View.VISIBLE);
+                binding.cardDataBan.setVisibility(View.VISIBLE);
+                binding.cardDataKriteria.setVisibility(View.VISIBLE);
+                binding.cardDataProcessing.setVisibility(View.VISIBLE);
+                binding.cardDataVikor.setVisibility(View.VISIBLE);
+                break;
+
+            case ROLE_PENGGUNA:
+                // Pengguna hanya bisa akses Data Ban dan Data Vikor
+                binding.tvWelcome.setText("Pengguna Dashboard");
+                binding.cardDataUser.setVisibility(View.GONE);
+                binding.cardDataBan.setVisibility(View.VISIBLE);
+                binding.cardDataKriteria.setVisibility(View.VISIBLE);
+                binding.cardDataProcessing.setVisibility(View.VISIBLE);
+                binding.cardDataVikor.setVisibility(View.VISIBLE);
+                adjustLayoutForMissingCard();
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    private void adjustLayoutForMissingCard() {
+        // Mengatur margin untuk card Data Ban agar memenuhi ruang yang tersedia
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) binding.cardDataBan.getLayoutParams();
+        params.setMarginStart(0); // Hilangkan margin start
+        params.setMarginEnd(0);   // Hilangkan margin end
+        binding.cardDataBan.setLayoutParams(params);
     }
 
     private void setupClickListeners() {

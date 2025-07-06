@@ -1,5 +1,6 @@
 package com.example.vikorsistemahmadban.activity.admin;
 
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -65,6 +66,12 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
     private List<KriteriaModel> kriteriaModelList;
     private JDBCConnection jdbcConnection;
 
+    // Role management
+    private static final String ROLE_ADMIN = "admin";
+    private static final String ROLE_PIMPINAN = "pimpinan";
+    private static final String ROLE_PENGGUNA = "pengguna";
+    private String userRole;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityVikorProcesBinding.inflate(getLayoutInflater());
@@ -78,9 +85,65 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
         });
 
         initializeViews();
+        getUserRole();
+        setupMenuBasedOnRole();
         setupRecyclerView();
         setupSearchFunctionality();
         loadInitialData();
+    }
+
+    private void getUserRole() {
+        // Prioritas 1: Ambil role dari Intent yang dikirim dari LoginActivity
+        userRole = getIntent().getStringExtra("USER_ROLE");
+
+        // Prioritas 2: Jika tidak ada di Intent, ambil dari SharedPreferences
+        if (userRole == null || userRole.isEmpty()) {
+            SharedPreferences sharedPreferences = getSharedPreferences("UserSession", MODE_PRIVATE);
+            userRole = sharedPreferences.getString("USER_ROLE", "");
+        }
+
+        // Prioritas 3: Jika masih tidak ada, ambil dari PrefManager
+        if (userRole == null || userRole.isEmpty()) {
+            com.example.vikorsistemahmadban.api.PrefManager prefManager =
+                    new com.example.vikorsistemahmadban.api.PrefManager(this);
+            userRole = prefManager.getTipe();
+        }
+
+        // Default ke pengguna jika masih null
+        if (userRole == null || userRole.isEmpty()) {
+            userRole = ROLE_PENGGUNA;
+        }
+    }
+
+    private void setupMenuBasedOnRole() {
+        switch (userRole) {
+            case ROLE_PIMPINAN:
+                // Sembunyikan FAB untuk pimpinan
+                binding.fabAddProses.setVisibility(View.GONE);
+                break;
+            case ROLE_PENGGUNA:
+                // Sembunyikan FAB untuk pengguna
+                binding.fabAddProses.setVisibility(View.GONE);
+                break;
+            case ROLE_ADMIN:
+                // Admin bisa akses semua
+                binding.fabAddProses.setVisibility(View.VISIBLE);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private boolean hasEditPermission() {
+        return userRole.equals(ROLE_ADMIN);
+    }
+
+    private boolean hasDeletePermission() {
+        return userRole.equals(ROLE_ADMIN);
+    }
+
+    private boolean hasAddPermission() {
+        return userRole.equals(ROLE_ADMIN);
     }
 
     private void initializeViews() {
@@ -109,6 +172,14 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
     }
 
     private void setupSwipeToRevealActions() {
+        if (userRole.equals(ROLE_PIMPINAN)) {
+            return; // Keluar dari method, tidak setup swipe
+        }
+
+        if (userRole.equals(ROLE_PENGGUNA)) {
+            return; // Keluar dari method, tidak setup swipe
+        }
+
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             private final float SWIPE_THRESHOLD = 0.3f;
 
@@ -260,21 +331,43 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
     @Override
     public void onItemClick(ProsesModel proses) {
         showProsesDetailDialog(proses);
+        if (!userRole.equals(ROLE_PIMPINAN)) {
+            showProsesDetailDialog(proses);
+        } else if (!userRole.equals(ROLE_PENGGUNA)) {
+            showProsesDetailDialog(proses);
+        } else {
+            showProsesDetailDialog(proses);
+        }
     }
 
     @Override
     public void onItemLongClick(ProsesModel proses) {
-        showProsesOptionsDialog(proses);
+        if (!userRole.equals(ROLE_PIMPINAN)) {
+            showProsesDetailDialog(proses);
+        } else if (!userRole.equals(ROLE_PENGGUNA)) {
+            showProsesDetailDialog(proses);
+        } else {
+            // Untuk pimpinan, langsung tampilkan detail
+            showProsesDetailDialog(proses);
+        }
     }
 
     @Override
     public void onUpdateClick(ProsesModel proses) {
-        showEditProsesDialog(proses);
+        if (hasEditPermission()) {
+            showEditProsesDialog(proses);
+        } else {
+            Toast.makeText(this, "Anda tidak memiliki permission untuk mengedit", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     public void onDeleteClick(ProsesModel proses) {
-        showDeleteConfirmationDialog(proses);
+        if (hasDeletePermission()) {
+            showDeleteConfirmationDialog(proses);
+        } else {
+            Toast.makeText(this, "Anda tidak memiliki permission untuk menghapus", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showProsesDetailDialog(ProsesModel proses) {
@@ -311,9 +404,18 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setView(dialogView)
                 .setTitle("Detail Proses")
-                .setPositiveButton("Tutup", null)
-                .setNeutralButton("Edit", (dialog, which) -> showEditProsesDialog(proses))
-                .show();
+                .setPositiveButton("Tutup", null);
+
+        // Hanya tampilkan tombol Edit jika bukan pimpinan & pengguna
+        if (!userRole.equals(ROLE_PIMPINAN)) {
+            builder.setNeutralButton("Edit", (dialog, which) -> showEditProsesDialog(proses));
+        }
+
+        if (!userRole.equals(ROLE_PENGGUNA)) {
+            builder.setNeutralButton("Edit", (dialog, which) -> showEditProsesDialog(proses));
+        }
+
+        builder.show();
     }
 
     private class LoadProsesDetailTask extends AsyncTask<Void, Void, List<ProsesDetailModel>> {
@@ -450,6 +552,17 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
     }
 
     private void showProsesOptionsDialog(ProsesModel proses) {
+        // Jika pimpinan & pengguna, hanya tampilkan View Details
+        if (userRole.equals(ROLE_PIMPINAN)) {
+            showProsesDetailDialog(proses);
+            return;
+        }
+
+        if (userRole.equals(ROLE_PENGGUNA)) {
+            showProsesDetailDialog(proses);
+            return;
+        }
+
         String[] options = {"Edit Proses", "Delete Proses", "View Details"};
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);

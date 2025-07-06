@@ -1,5 +1,6 @@
 package com.example.vikorsistemahmadban.activity.admin;
 
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -57,6 +58,12 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
     private static final int MAX_NILAI = 400;
     private static final String[] JENIS_KRITERIA = {"Benefit", "Cost"};
 
+    // Role management
+    private static final String ROLE_ADMIN = "admin";
+    private static final String ROLE_PIMPINAN = "pimpinan";
+    private static final String ROLE_PENGGUNA = "pengguna";
+    private String userRole;
+
     // Helper class untuk mengirim data kriteria dan sub kriteria
     private static class KriteriaWithSubKriteria {
         public final KriteriaModel kriteria;
@@ -82,9 +89,65 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
         });
 
         initializeViews();
+        getUserRole();
+        setupMenuBasedOnRole();
         setupRecyclerView();
         setupSearchFunctionality();
         loadKriteriaData();
+    }
+
+    private void getUserRole() {
+        // Prioritas 1: Ambil role dari Intent yang dikirim dari LoginActivity
+        userRole = getIntent().getStringExtra("USER_ROLE");
+
+        // Prioritas 2: Jika tidak ada di Intent, ambil dari SharedPreferences
+        if (userRole == null || userRole.isEmpty()) {
+            SharedPreferences sharedPreferences = getSharedPreferences("UserSession", MODE_PRIVATE);
+            userRole = sharedPreferences.getString("USER_ROLE", "");
+        }
+
+        // Prioritas 3: Jika masih tidak ada, ambil dari PrefManager
+        if (userRole == null || userRole.isEmpty()) {
+            com.example.vikorsistemahmadban.api.PrefManager prefManager =
+                    new com.example.vikorsistemahmadban.api.PrefManager(this);
+            userRole = prefManager.getTipe();
+        }
+
+        // Default ke pengguna jika masih null
+        if (userRole == null || userRole.isEmpty()) {
+            userRole = ROLE_PENGGUNA;
+        }
+    }
+
+    private void setupMenuBasedOnRole() {
+        switch (userRole) {
+            case ROLE_PIMPINAN:
+                // Sembunyikan FAB untuk pimpinan
+                binding.fabAddKriteria.setVisibility(View.GONE);
+                break;
+            case ROLE_PENGGUNA:
+                // Sembunyikan FAB untuk pengguna
+                binding.fabAddKriteria.setVisibility(View.GONE);
+                break;
+            case ROLE_ADMIN:
+                // Admin bisa akses semua
+                binding.fabAddKriteria.setVisibility(View.VISIBLE);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private boolean hasEditPermission() {
+        return userRole.equals(ROLE_ADMIN);
+    }
+
+    private boolean hasDeletePermission() {
+        return userRole.equals(ROLE_ADMIN);
+    }
+
+    private boolean hasAddPermission() {
+        return userRole.equals(ROLE_ADMIN);
     }
 
     private void initializeViews() {
@@ -112,6 +175,14 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
     }
 
     private void setupSwipeToRevealActions() {
+        if (userRole.equals(ROLE_PIMPINAN)) {
+            return; // Keluar dari method, tidak setup swipe
+        }
+
+        if (userRole.equals(ROLE_PENGGUNA)) {
+            return; // Keluar dari method, tidak setup swipe
+        }
+
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             private final float SWIPE_THRESHOLD = 0.3f; // 30% of item width
 
@@ -292,23 +363,43 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
     // KriteriaAdapter.OnItemClickListener implementation
     @Override
     public void onItemClick(KriteriaModel kriteria) {
-        showKriteriaDetailDialog(kriteria);
+        if (!userRole.equals(ROLE_PIMPINAN)) {
+            showKriteriaOptionsDialog(kriteria);
+        } else if (!userRole.equals(ROLE_PENGGUNA)) {
+            showKriteriaOptionsDialog(kriteria);
+        } else {
+            showKriteriaOptionsDialog(kriteria);
+        }
     }
 
     @Override
     public void onItemLongClick(KriteriaModel kriteria) {
-        showKriteriaOptionsDialog(kriteria);
+        if (!userRole.equals(ROLE_PIMPINAN)) {
+            showKriteriaOptionsDialog(kriteria);
+        } else if (!userRole.equals(ROLE_PENGGUNA)) {
+            showKriteriaOptionsDialog(kriteria);
+        } else {
+            showKriteriaOptionsDialog(kriteria);
+        }
     }
 
     // KriteriaAdapter.OnSwipeActionListener implementation
     @Override
     public void onUpdateClick(KriteriaModel kriteria) {
-        showEditKriteriaDialog(kriteria);
+        if (hasEditPermission()) {
+            showEditKriteriaDialog(kriteria);
+        } else {
+            Toast.makeText(this, "Anda tidak memiliki permission untuk mengedit", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     public void onDeleteClick(KriteriaModel kriteria) {
-        showDeleteConfirmationDialog(kriteria);
+        if (hasEditPermission()) {
+            showDeleteConfirmationDialog(kriteria);
+        } else {
+            Toast.makeText(this, "Anda tidak memiliki permission untuk mengedit", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showKriteriaDetailDialog(KriteriaModel kriteria) {
@@ -333,9 +424,18 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setView(dialogView)
                 .setTitle("Detail Kriteria")
-                .setPositiveButton("Tutup", null)
-                .setNeutralButton("Edit", (dialog, which) -> showEditKriteriaDialog(kriteria))
-                .show();
+                .setPositiveButton("Tutup", null);
+
+        // Hanya tampilkan tombol Edit jika bukan pimpinan
+        if (!userRole.equals(ROLE_PIMPINAN)) {
+            builder.setNeutralButton("Edit", (dialog, which) -> showEditKriteriaDialog(kriteria));
+        }
+
+        if (!userRole.equals(ROLE_PENGGUNA)) {
+            builder.setNeutralButton("Edit", (dialog, which) -> showEditKriteriaDialog(kriteria));
+        }
+
+        builder.show();
     }
 
     private void setupSubKriteriaRecyclerView(RecyclerView recyclerView, String kriteriaId, boolean isReadOnly) {
@@ -348,6 +448,16 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
     }
 
     private void showKriteriaOptionsDialog(KriteriaModel kriteria) {
+        if (userRole.equals(ROLE_PIMPINAN)) {
+            showKriteriaDetailDialog(kriteria);
+            return;
+        }
+
+        if (userRole.equals(ROLE_PENGGUNA)) {
+            showKriteriaDetailDialog(kriteria);
+            return;
+        }
+
         String[] options = {"Edit Kriteria", "Delete Kriteria", "View Details"};
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
