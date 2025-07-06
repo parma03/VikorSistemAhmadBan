@@ -36,7 +36,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Data Produk Ban"
+                    android:text="Data Alternatif Ban"
                     android:textColor="@color/white"
                     android:textSize="24sp"
                     android:textStyle="bold" />
@@ -136,7 +136,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Belum ada data ban"
+            android:text="Belum ada data alternatif ban"
             android:textColor="@color/text_secondary"
             android:textSize="16sp"
             android:layout_marginTop="16dp" />
@@ -144,7 +144,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tap tombol + untuk menambah ban baru"
+            android:text="Tap tombol + untuk menambah alternatif ban baru"
             android:textColor="@color/text_hint"
             android:textSize="12sp"
             android:layout_marginTop="4dp" />

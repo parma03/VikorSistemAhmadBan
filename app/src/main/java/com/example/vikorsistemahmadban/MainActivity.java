@@ -2,6 +2,7 @@ package com.example.vikorsistemahmadban;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,7 +16,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.vikorsistemahmadban.activity.admin.DataUserActivity;
 import com.example.vikorsistemahmadban.activity.admin.MainAdminActivity;
+import com.example.vikorsistemahmadban.activity.pengguna.MainPenggunaActivity;
 import com.example.vikorsistemahmadban.activity.pimpinan.MainPimpinanActivity;
 import com.example.vikorsistemahmadban.api.JDBCConnection;
 import com.example.vikorsistemahmadban.api.PrefManager;
@@ -59,6 +62,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 performLogin();
+            }
+        });
+
+        binding.btnRegister.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
+                startActivity(intent);
             }
         });
     }
@@ -287,7 +298,16 @@ public class MainActivity extends AppCompatActivity {
         prefManager.setImg(result.profile != null ? result.profile : "");
         prefManager.setLoginStatus(true);
 
-        Log.d(TAG, "User data saved to preferences");
+        // TAMBAHAN: Simpan role dengan key yang konsisten
+        SharedPreferences sharedPreferences = getSharedPreferences("UserSession", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("USER_ROLE", result.role);
+        editor.putString("USER_ID", result.userId);
+        editor.putString("USERNAME", result.username);
+        editor.putString("NAMA", result.nama != null ? result.nama : result.username);
+        editor.apply();
+
+        Log.d(TAG, "User data saved to preferences with role: " + result.role);
     }
 
     private void redirectToMainActivity(String role) {
@@ -298,7 +318,10 @@ public class MainActivity extends AppCompatActivity {
                 intent = new Intent(MainActivity.this, MainAdminActivity.class);
                 break;
             case "pimpinan":
-                intent = new Intent(MainActivity.this, MainPimpinanActivity.class);
+                intent = new Intent(MainActivity.this, MainAdminActivity.class); // Bisa diganti ke MainPimpinanActivity jika ada
+                break;
+            case "pengguna":
+                intent = new Intent(MainActivity.this, MainAdminActivity.class); // Bisa diganti ke MainPenggunaActivity jika ada
                 break;
             default:
                 showErrorAlert("Role tidak valid: " + role);
@@ -306,6 +329,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (intent != null) {
+            // TAMBAHAN: Kirim role melalui Intent
+            intent.putExtra("USER_ROLE", role);
             startActivity(intent);
             finish(); // Tutup activity login
             Log.d(TAG, "Redirected to " + role + " main activity");

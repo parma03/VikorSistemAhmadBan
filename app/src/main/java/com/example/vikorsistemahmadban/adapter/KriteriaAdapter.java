@@ -186,7 +186,7 @@ public class KriteriaAdapter extends RecyclerView.Adapter<KriteriaAdapter.Kriter
         }
 
         public void bind(KriteriaModel kriteria) {
-            tvNamaKriteria.setText(kriteria.getNama_kriteria());
+            tvNamaKriteria.setText(kriteria.getNama_kriteria() + "(" + kriteria.getKategori() + ")");
             tvIdKriteria.setText("ID: " + kriteria.getId_kriteria());
             tvBobot.setText(kriteria.getBobot());
 

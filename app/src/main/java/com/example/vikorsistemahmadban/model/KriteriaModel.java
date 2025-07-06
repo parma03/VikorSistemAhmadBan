@@ -1,14 +1,16 @@
 package com.example.vikorsistemahmadban.model;
 
 public class KriteriaModel {
-    public String id_kriteria;
-    public String nama_kriteria;
-    public String nilai;
-    public String bobot;
+    private String id_kriteria;
+    private String nama_kriteria;
+    private String kategori;
+    private String bobot;
+    private String nilai;
 
-    public KriteriaModel(String id_kriteria, String nama_kriteria, String nilai, String bobot) {
+    public KriteriaModel(String id_kriteria, String nama_kriteria, String kategori, String nilai, String bobot) {
         this.id_kriteria = id_kriteria;
         this.nama_kriteria = nama_kriteria;
+        this.kategori = kategori;
         this.nilai = nilai;
         this.bobot = bobot;
     }
@@ -29,12 +31,12 @@ public class KriteriaModel {
         this.nama_kriteria = nama_kriteria;
     }
 
-    public String getNilai() {
-        return nilai;
+    public String getKategori() {
+        return kategori;
     }
 
-    public void setNilai(String nilai) {
-        this.nilai = nilai;
+    public void setKategori(String kategori) {
+        this.kategori = kategori;
     }
 
     public String getBobot() {
@@ -43,5 +45,22 @@ public class KriteriaModel {
 
     public void setBobot(String bobot) {
         this.bobot = bobot;
+    }
+
+    public String getNilai() {
+        return nilai;
+    }
+
+    public void setNilai(String nilai) {
+        this.nilai = nilai;
+    }
+
+    // Method helper untuk mengecek apakah kriteria ini benefit atau cost
+    public boolean isBenefit() {
+        return "benefit".equalsIgnoreCase(this.kategori);
+    }
+
+    public boolean isCost() {
+        return "cost".equalsIgnoreCase(this.kategori);
     }
 }
