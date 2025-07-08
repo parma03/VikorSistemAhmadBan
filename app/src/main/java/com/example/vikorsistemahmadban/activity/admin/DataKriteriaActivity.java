@@ -177,9 +177,7 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
     private void setupSwipeToRevealActions() {
         if (userRole.equals(ROLE_PIMPINAN)) {
             return; // Keluar dari method, tidak setup swipe
-        }
-
-        if (userRole.equals(ROLE_PENGGUNA)) {
+        } else if (userRole.equals(ROLE_PENGGUNA)) {
             return; // Keluar dari method, tidak setup swipe
         }
 
@@ -427,11 +425,7 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
                 .setPositiveButton("Tutup", null);
 
         // Hanya tampilkan tombol Edit jika bukan pimpinan
-        if (!userRole.equals(ROLE_PIMPINAN)) {
-            builder.setNeutralButton("Edit", (dialog, which) -> showEditKriteriaDialog(kriteria));
-        }
-
-        if (!userRole.equals(ROLE_PENGGUNA)) {
+        if (userRole.equals(ROLE_ADMIN)) {
             builder.setNeutralButton("Edit", (dialog, which) -> showEditKriteriaDialog(kriteria));
         }
 
@@ -451,9 +445,7 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
         if (userRole.equals(ROLE_PIMPINAN)) {
             showKriteriaDetailDialog(kriteria);
             return;
-        }
-
-        if (userRole.equals(ROLE_PENGGUNA)) {
+        } else if (userRole.equals(ROLE_PENGGUNA)) {
             showKriteriaDetailDialog(kriteria);
             return;
         }

@@ -179,9 +179,7 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
     private void setupSwipeToRevealActions() {
         if (userRole.equals(ROLE_PIMPINAN)) {
             return; // Keluar dari method, tidak setup swipe
-        }
-
-        if (userRole.equals(ROLE_PENGGUNA)) {
+        } else if (userRole.equals(ROLE_PENGGUNA)) {
             return; // Keluar dari method, tidak setup swipe
         }
 
@@ -462,11 +460,7 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
                 .setPositiveButton("Tutup", null);
 
         // Hanya tampilkan tombol Edit jika bukan pimpinan & pengguna
-        if (!userRole.equals(ROLE_PIMPINAN)) {
-            builder.setNeutralButton("Edit", (dialog, which) -> showEditBanDialog(ban));
-        }
-
-        if (!userRole.equals(ROLE_PENGGUNA)) {
+        if (userRole.equals(ROLE_ADMIN)) {
             builder.setNeutralButton("Edit", (dialog, which) -> showEditBanDialog(ban));
         }
 
@@ -478,9 +472,7 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
         if (userRole.equals(ROLE_PIMPINAN)) {
             showBanDetailDialog(ban);
             return;
-        }
-
-        if (userRole.equals(ROLE_PENGGUNA)) {
+        } else if (userRole.equals(ROLE_PENGGUNA)) {
             showBanDetailDialog(ban);
             return;
         }
