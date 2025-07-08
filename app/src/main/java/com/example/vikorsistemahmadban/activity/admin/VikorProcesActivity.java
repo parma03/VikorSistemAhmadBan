@@ -174,9 +174,7 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
     private void setupSwipeToRevealActions() {
         if (userRole.equals(ROLE_PIMPINAN)) {
             return; // Keluar dari method, tidak setup swipe
-        }
-
-        if (userRole.equals(ROLE_PENGGUNA)) {
+        } else if (userRole.equals(ROLE_PENGGUNA)) {
             return; // Keluar dari method, tidak setup swipe
         }
 
@@ -407,11 +405,7 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
                 .setPositiveButton("Tutup", null);
 
         // Hanya tampilkan tombol Edit jika bukan pimpinan & pengguna
-        if (!userRole.equals(ROLE_PIMPINAN)) {
-            builder.setNeutralButton("Edit", (dialog, which) -> showEditProsesDialog(proses));
-        }
-
-        if (!userRole.equals(ROLE_PENGGUNA)) {
+        if (userRole.equals(ROLE_ADMIN)) {
             builder.setNeutralButton("Edit", (dialog, which) -> showEditProsesDialog(proses));
         }
 
@@ -556,9 +550,7 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
         if (userRole.equals(ROLE_PIMPINAN)) {
             showProsesDetailDialog(proses);
             return;
-        }
-
-        if (userRole.equals(ROLE_PENGGUNA)) {
+        } else if (userRole.equals(ROLE_PENGGUNA)) {
             showProsesDetailDialog(proses);
             return;
         }

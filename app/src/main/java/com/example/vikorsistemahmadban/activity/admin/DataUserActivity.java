@@ -437,7 +437,7 @@ public class DataUserActivity extends AppCompatActivity implements UserAdapter.O
                 .setPositiveButton("Tutup", null);
 
         // Hanya tampilkan tombol Edit jika bukan pimpinan
-        if (!userRole.equals(ROLE_PIMPINAN)) {
+        if (userRole.equals(ROLE_ADMIN)) {
             builder.setNeutralButton("Edit", (dialog, which) -> showEditUserDialog(user));
         }
 
