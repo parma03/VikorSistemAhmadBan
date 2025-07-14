@@ -123,7 +123,7 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
                 break;
             case ROLE_PENGGUNA:
                 // Sembunyikan FAB untuk pengguna
-                binding.fabAddProses.setVisibility(View.GONE);
+                binding.fabAddProses.setVisibility(View.VISIBLE);
                 break;
             case ROLE_ADMIN:
                 // Admin bisa akses semua
@@ -173,8 +173,6 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
 
     private void setupSwipeToRevealActions() {
         if (userRole.equals(ROLE_PIMPINAN)) {
-            return; // Keluar dari method, tidak setup swipe
-        } else if (userRole.equals(ROLE_PENGGUNA)) {
             return; // Keluar dari method, tidak setup swipe
         }
 
@@ -331,8 +329,6 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
         showProsesDetailDialog(proses);
         if (!userRole.equals(ROLE_PIMPINAN)) {
             showProsesDetailDialog(proses);
-        } else if (!userRole.equals(ROLE_PENGGUNA)) {
-            showProsesDetailDialog(proses);
         } else {
             showProsesDetailDialog(proses);
         }
@@ -341,8 +337,6 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
     @Override
     public void onItemLongClick(ProsesModel proses) {
         if (!userRole.equals(ROLE_PIMPINAN)) {
-            showProsesDetailDialog(proses);
-        } else if (!userRole.equals(ROLE_PENGGUNA)) {
             showProsesDetailDialog(proses);
         } else {
             // Untuk pimpinan, langsung tampilkan detail
