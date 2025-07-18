@@ -1,5 +1,6 @@
 package com.example.vikorsistemahmadban.activity.admin;
 
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -7,6 +8,8 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 
@@ -33,7 +36,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -92,6 +97,15 @@ public class DataVikorActivity extends AppCompatActivity {
     private static final String ROLE_PENGGUNA = "pengguna";
     private String userRole;
 
+    private String selectedDateFrom = "";
+    private String selectedDateTo = "";
+    private Double hargaMin = null;
+    private Double hargaMax = null;
+    private List<VikorResultModel> originalVikorResults = new ArrayList<>();
+    private DatePickerDialog datePickerDialog;
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -109,6 +123,7 @@ public class DataVikorActivity extends AppCompatActivity {
         setupMenuBasedOnRole();
         setupRecyclerView();
         setupExportButtons();
+        setupFilterButtons();
         loadDataAndCalculateVikor();
     }
 
@@ -305,6 +320,207 @@ public class DataVikorActivity extends AppCompatActivity {
         return false;
     }
 
+    private void setupFilterButtons() {
+        // Filter harga min
+        binding.etHargaMin.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.toString().isEmpty()) {
+                    hargaMin = null;
+                } else {
+                    try {
+                        hargaMin = Double.parseDouble(s.toString());
+                    } catch (NumberFormatException e) {
+                        hargaMin = null;
+                    }
+                }
+            }
+        });
+
+        // Filter harga max
+        binding.etHargaMax.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.toString().isEmpty()) {
+                    hargaMax = null;
+                } else {
+                    try {
+                        hargaMax = Double.parseDouble(s.toString());
+                    } catch (NumberFormatException e) {
+                        hargaMax = null;
+                    }
+                }
+            }
+        });
+
+        // Date From picker
+        binding.btnDateFrom.setOnClickListener(v -> showDatePickerDialog(true));
+
+        // Date To picker
+        binding.btnDateTo.setOnClickListener(v -> showDatePickerDialog(false));
+
+        // Apply filter
+        binding.btnApplyFilter.setOnClickListener(v -> applyFilters());
+
+        // Reset filter
+        binding.btnResetFilter.setOnClickListener(v -> resetFilters());
+    }
+
+    private void showDatePickerDialog(boolean isFromDate) {
+        Calendar calendar = Calendar.getInstance();
+
+        // Set tanggal default berdasarkan data yang sudah ada
+        if (!originalVikorResults.isEmpty()) {
+            if (isFromDate && selectedDateFrom.isEmpty()) {
+                // Set ke tanggal paling awal dari data
+                String earliestDate = originalVikorResults.stream()
+                        .map(VikorResultModel::getTanggal)
+                        .min(String::compareTo)
+                        .orElse("");
+                if (!earliestDate.isEmpty()) {
+                    try {
+                        Date date = dateFormat.parse(earliestDate);
+                        calendar.setTime(date);
+                    } catch (ParseException e) {
+                        Log.e("DatePicker", "Error parsing date: " + e.getMessage());
+                    }
+                }
+            } else if (!isFromDate && selectedDateTo.isEmpty()) {
+                // Set ke tanggal paling akhir dari data
+                String latestDate = originalVikorResults.stream()
+                        .map(VikorResultModel::getTanggal)
+                        .max(String::compareTo)
+                        .orElse("");
+                if (!latestDate.isEmpty()) {
+                    try {
+                        Date date = dateFormat.parse(latestDate);
+                        calendar.setTime(date);
+                    } catch (ParseException e) {
+                        Log.e("DatePicker", "Error parsing date: " + e.getMessage());
+                    }
+                }
+            }
+        }
+
+        datePickerDialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+                    Calendar selectedCalendar = Calendar.getInstance();
+                    selectedCalendar.set(year, month, dayOfMonth);
+                    String selectedDate = dateFormat.format(selectedCalendar.getTime());
+
+                    if (isFromDate) {
+                        selectedDateFrom = selectedDate;
+                        binding.btnDateFrom.setText(selectedDate);
+                        binding.btnDateFrom.setTextColor(getResources().getColor(R.color.black));
+                    } else {
+                        selectedDateTo = selectedDate;
+                        binding.btnDateTo.setText(selectedDate);
+                        binding.btnDateTo.setTextColor(getResources().getColor(R.color.black));
+                    }
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        datePickerDialog.show();
+    }
+
+    private void applyFilters() {
+        if (originalVikorResults.isEmpty()) {
+            Toast.makeText(this, "Tidak ada data untuk difilter", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        List<VikorResultModel> filteredResults = new ArrayList<>();
+
+        for (VikorResultModel result : originalVikorResults) {
+            boolean passFilter = true;
+
+            // Filter berdasarkan harga
+            if (hargaMin != null || hargaMax != null) {
+                try {
+                    double hargaBan = Double.parseDouble(result.getHargaBan().replace(",", ""));
+
+                    if (hargaMin != null && hargaBan < hargaMin) {
+                        passFilter = false;
+                    }
+                    if (hargaMax != null && hargaBan > hargaMax) {
+                        passFilter = false;
+                    }
+                } catch (NumberFormatException e) {
+                    Log.e("Filter", "Error parsing harga: " + e.getMessage());
+                    passFilter = false;
+                }
+            }
+
+            // Filter berdasarkan tanggal
+            if (passFilter && (!selectedDateFrom.isEmpty() || !selectedDateTo.isEmpty())) {
+                String resultDate = result.getTanggal();
+
+                if (!selectedDateFrom.isEmpty() && resultDate.compareTo(selectedDateFrom) < 0) {
+                    passFilter = false;
+                }
+                if (!selectedDateTo.isEmpty() && resultDate.compareTo(selectedDateTo) > 0) {
+                    passFilter = false;
+                }
+            }
+
+            if (passFilter) {
+                filteredResults.add(result);
+            }
+        }
+
+        // Ranking ulang setelah filter
+        filteredResults.sort((a, b) -> Double.compare(a.getQiValue(), b.getQiValue()));
+        for (int i = 0; i < filteredResults.size(); i++) {
+            filteredResults.get(i).setRanking(i + 1);
+        }
+
+        currentVikorResults = filteredResults;
+        vikorAdapter.setVikorList(filteredResults);
+
+        // Tampilkan informasi hasil filter
+        String message = "Filter diterapkan. Ditemukan " + filteredResults.size() +
+                " dari " + originalVikorResults.size() + " data.";
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void resetFilters() {
+        // Reset semua filter
+        hargaMin = null;
+        hargaMax = null;
+        selectedDateFrom = "";
+        selectedDateTo = "";
+
+        // Reset UI
+        binding.etHargaMin.setText("");
+        binding.etHargaMax.setText("");
+        binding.btnDateFrom.setText("Dari Tanggal");
+        binding.btnDateTo.setText("Sampai Tanggal");
+        binding.btnDateFrom.setTextColor(getResources().getColor(R.color.bronze));
+        binding.btnDateTo.setTextColor(getResources().getColor(R.color.bronze));
+
+        // Tampilkan semua data
+        currentVikorResults = new ArrayList<>(originalVikorResults);
+        vikorAdapter.setVikorList(currentVikorResults);
+
+        Toast.makeText(this, "Filter direset", Toast.LENGTH_SHORT).show();
+    }
+
     private void calculateVikorRanking() {
         List<VikorResultModel> vikorResults = new ArrayList<>();
 
@@ -338,6 +554,8 @@ public class DataVikorActivity extends AppCompatActivity {
             vikorResults.get(i).setRanking(i + 1);
         }
 
+        // Simpan data original untuk filter
+        originalVikorResults = new ArrayList<>(vikorResults);
         currentVikorResults = vikorResults;
         vikorAdapter.setVikorList(vikorResults);
     }
@@ -478,7 +696,9 @@ public class DataVikorActivity extends AppCompatActivity {
 
                 if (ban != null) {
                     VikorResultModel result = new VikorResultModel();
-                    result.setNamaBan(ban.getNama_ban() + " (" + date + ")");
+                    result.setNamaBan(ban.getNama_ban());
+                    result.setTanggal(date);
+                    result.setHargaBan(ban.getHarga());
                     result.setAlternatif("A" + banId + "_" + date.replace("-", ""));
                     result.setSiValue(si);
                     result.setRiValue(ri);

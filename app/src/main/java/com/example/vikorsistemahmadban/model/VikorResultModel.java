@@ -2,6 +2,8 @@ package com.example.vikorsistemahmadban.model;
 
 public class VikorResultModel {
     private String namaBan;
+    private String tanggal;
+    private String hargaBan;
     private String alternatif;
     private double siValue;
     private double riValue;
@@ -15,9 +17,11 @@ public class VikorResultModel {
 
     public VikorResultModel() {}
 
-    public VikorResultModel(String namaBan, String alternatif, double siValue, double riValue,
+    public VikorResultModel(String namaBan, String tanggal, String hargaBan, String alternatif, double siValue, double riValue,
                             double qiValue, int ranking) {
         this.namaBan = namaBan;
+        this.tanggal = tanggal;
+        this.hargaBan = hargaBan;
         this.alternatif = alternatif;
         this.siValue = siValue;
         this.riValue = riValue;
@@ -32,6 +36,22 @@ public class VikorResultModel {
 
     public void setNamaBan(String namaBan) {
         this.namaBan = namaBan;
+    }
+
+    public String getTanggal() {
+        return tanggal;
+    }
+
+    public void setTanggal(String tanggal) {
+        this.tanggal = tanggal;
+    }
+
+    public String getHargaBan() {
+        return hargaBan;
+    }
+
+    public void setHargaBan(String hargaBan) {
+        this.hargaBan = hargaBan;
     }
 
     public String getAlternatif() {

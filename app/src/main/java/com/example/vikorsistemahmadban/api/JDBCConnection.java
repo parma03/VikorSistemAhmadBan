@@ -10,7 +10,7 @@ public class JDBCConnection {
 
     // Database connection parameters
     private static final String EMULATOR_HOST = "10.0.2.2";
-    private static final String REAL_DEVICE_HOST  = "192.168.137.1";
+    private static final String REAL_DEVICE_HOST  = "192.168.18.172";
     private static final String DB_PORT = "3306";
     private static final String DB_NAME = "db_ahmadban";
     private static final String DB_USER = "parma03";

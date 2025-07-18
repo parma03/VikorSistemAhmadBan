@@ -17,7 +17,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.vikorsistemahmadban.activity.admin.DataUserActivity;
+import com.example.vikorsistemahmadban.activity.admin.DataVikorActivity;
 import com.example.vikorsistemahmadban.activity.admin.MainAdminActivity;
+import com.example.vikorsistemahmadban.activity.admin.VikorProcesActivity;
 import com.example.vikorsistemahmadban.activity.pengguna.MainPenggunaActivity;
 import com.example.vikorsistemahmadban.activity.pimpinan.MainPimpinanActivity;
 import com.example.vikorsistemahmadban.api.JDBCConnection;
@@ -68,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         binding.btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
+                Intent intent = new Intent(MainActivity.this, DataVikorActivity.class);
                 startActivity(intent);
             }
         });

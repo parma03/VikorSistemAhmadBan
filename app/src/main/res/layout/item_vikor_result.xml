@@ -3,12 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_marginHorizontal="8dp"
     android:layout_marginVertical="4dp"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="6dp">
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -16,7 +17,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Header Section -->
+        <!-- Header Section with Trophy -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,20 +28,35 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:background="@color/cardview_dark_background"
+                android:layout_centerVertical="true"
+                android:background="@drawable/bg_ranking_badge"
                 android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp"
+                android:paddingVertical="6dp"
                 android:text="Ranking 1"
                 android:textColor="@android:color/white"
                 android:textSize="12sp"
                 android:textStyle="bold" />
 
+            <!-- Trophy Icon for Top 3 -->
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:id="@+id/ivTrophy"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:src="@mipmap/ic_calculator_foreground" />
+                android:src="@drawable/ic_trophy"
+                android:visibility="visible" />
+
+            <!-- Calculator Icon -->
+            <ImageView
+                android:id="@+id/ivCalculator"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@id/ivTrophy"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_calculator"
+                android:alpha="0.7" />
 
         </RelativeLayout>
 
@@ -52,31 +68,106 @@
             android:layout_marginBottom="4dp"
             android:text="Bridgestone Ecopia"
             android:textColor="@color/textColor"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tvAlternatif"
+        <!-- Price and Date Information -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:text="A1"
-            android:textColor="@android:color/darker_gray"
-            android:textSize="14sp" />
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <!-- Calculation Results -->
+            <!-- Price -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="start|center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginEnd="4dp"
+                    android:alpha="0.7" />
+
+                <TextView
+                    android:id="@+id/tvHarga"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rp 1.250.000"
+                    android:textColor="@color/primary_blue"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <!-- Date -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="end|center_vertical">
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_marginEnd="4dp"
+                    android:alpha="0.7" />
+
+                <TextView
+                    android:id="@+id/tvTanggal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="18 Jul 2025"
+                    android:textColor="@color/black"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Alternative Badge -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvAlternatif"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_alternatif_badge"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="4dp"
+                android:text="A1"
+                android:textColor="@color/primary_blue"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <!-- Calculation Results Grid -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:weightSum="3">
 
+            <!-- Si Value -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="center">
+                android:gravity="center"
+                android:background="@drawable/bg_value_container"
+                android:padding="8dp"
+                android:layout_marginEnd="4dp">
 
                 <TextView
                     android:id="@+id/tvSiValue"
@@ -84,7 +175,7 @@
                     android:layout_height="wrap_content"
                     android:text="Si = 0.7501"
                     android:textColor="@color/textColor"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -92,16 +183,21 @@
                     android:layout_height="wrap_content"
                     android:text="Utility"
                     android:textColor="@android:color/darker_gray"
-                    android:textSize="10sp" />
+                    android:textSize="10sp"
+                    android:layout_marginTop="2dp" />
 
             </LinearLayout>
 
+            <!-- Ri Value -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="center">
+                android:gravity="center"
+                android:background="@drawable/bg_value_container"
+                android:padding="8dp"
+                android:layout_marginHorizontal="4dp">
 
                 <TextView
                     android:id="@+id/tvRiValue"
@@ -109,7 +205,7 @@
                     android:layout_height="wrap_content"
                     android:text="Ri = 0.15"
                     android:textColor="@color/textColor"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -117,16 +213,21 @@
                     android:layout_height="wrap_content"
                     android:text="Regret"
                     android:textColor="@android:color/darker_gray"
-                    android:textSize="10sp" />
+                    android:textSize="10sp"
+                    android:layout_marginTop="2dp" />
 
             </LinearLayout>
 
+            <!-- Qi Value -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:orientation="vertical"
-                android:gravity="center">
+                android:gravity="center"
+                android:background="@drawable/bg_value_container"
+                android:padding="8dp"
+                android:layout_marginStart="4dp">
 
                 <TextView
                     android:id="@+id/tvQiValue"
@@ -134,7 +235,7 @@
                     android:layout_height="wrap_content"
                     android:text="Qi = 0.6487"
                     android:textColor="@color/textColor"
-                    android:textSize="12sp"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -142,7 +243,8 @@
                     android:layout_height="wrap_content"
                     android:text="Index"
                     android:textColor="@android:color/darker_gray"
-                    android:textSize="10sp" />
+                    android:textSize="10sp"
+                    android:layout_marginTop="2dp" />
 
             </LinearLayout>
 
@@ -152,18 +254,33 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="12dp"
-            android:background="@color/cardview_dark_background" />
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/gradient_divider" />
 
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:text="Tap untuk melihat detail perhitungan"
-            android:textColor="@android:color/darker_gray"
-            android:textSize="11sp"
-            android:textStyle="italic" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:src="@drawable/ic_touch"
+                android:layout_marginEnd="8dp"
+                android:alpha="0.6" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Tap untuk melihat detail perhitungan"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="11sp"
+                android:textStyle="italic" />
+
+        </LinearLayout>
 
     </LinearLayout>
 
