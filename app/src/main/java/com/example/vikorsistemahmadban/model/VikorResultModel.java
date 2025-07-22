@@ -4,6 +4,8 @@ public class VikorResultModel {
     private String namaBan;
     private String tanggal;
     private String hargaBan;
+    private String tipe_ban;
+    private String deskripsi;
     private String alternatif;
     private double siValue;
     private double riValue;
@@ -17,11 +19,13 @@ public class VikorResultModel {
 
     public VikorResultModel() {}
 
-    public VikorResultModel(String namaBan, String tanggal, String hargaBan, String alternatif, double siValue, double riValue,
+    public VikorResultModel(String namaBan, String tanggal, String hargaBan, String tipe_ban, String deskripsi, String alternatif, double siValue, double riValue,
                             double qiValue, int ranking) {
         this.namaBan = namaBan;
         this.tanggal = tanggal;
         this.hargaBan = hargaBan;
+        this.tipe_ban = tipe_ban;
+        this.deskripsi = deskripsi;
         this.alternatif = alternatif;
         this.siValue = siValue;
         this.riValue = riValue;
@@ -52,6 +56,22 @@ public class VikorResultModel {
 
     public void setHargaBan(String hargaBan) {
         this.hargaBan = hargaBan;
+    }
+
+    public String getTipe_ban() {
+        return tipe_ban;
+    }
+
+    public void setTipe_ban(String tipe_ban) {
+        this.tipe_ban = tipe_ban;
+    }
+
+    public String getDeskripsi() {
+        return deskripsi;
+    }
+
+    public void setDeskripsi(String deskripsi) {
+        this.deskripsi = deskripsi;
     }
 
     public String getAlternatif() {

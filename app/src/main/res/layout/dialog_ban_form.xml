@@ -101,6 +101,15 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Tipe Ban Field -->
+            <Spinner
+                android:id="@+id/spinnerTipeBan"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:spinnerMode="dropdown" />
+
             <!-- Deskripsi Field -->
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -132,7 +141,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="* Semua field wajib diisi kecuali URL Foto Ban"
+                android:text="* Semua field wajib diisi kecuali Foto Ban"
                 android:textColor="@color/text_hint"
                 android:textSize="12sp"
                 android:textStyle="italic"

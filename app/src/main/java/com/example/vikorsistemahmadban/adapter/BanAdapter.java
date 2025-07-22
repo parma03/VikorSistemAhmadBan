@@ -140,7 +140,7 @@ public class BanAdapter extends RecyclerView.Adapter<BanAdapter.BanViewHolder> {
     public class BanViewHolder extends RecyclerView.ViewHolder {
         private MaterialCardView foregroundCard;
         private ImageView ivFotoBan;
-        private TextView tvNamaBan, tvIdBan, tvHarga, tvDeskripsi, tvCreatedAt;
+        private TextView tvNamaBan, tvIdBan, tvHarga, tvDeskripsi, tvTipeBan, tvCreatedAt;
         private View updateAction, deleteAction;
 
         public BanViewHolder(@NonNull View itemView) {
@@ -152,6 +152,7 @@ public class BanAdapter extends RecyclerView.Adapter<BanAdapter.BanViewHolder> {
             tvIdBan = itemView.findViewById(R.id.tvIdBan);
             tvHarga = itemView.findViewById(R.id.tvHarga);
             tvDeskripsi = itemView.findViewById(R.id.tvDeskripsi);
+            tvTipeBan = itemView.findViewById(R.id.tvTipeBan);
             tvCreatedAt = itemView.findViewById(R.id.tvCreatedAt);
             updateAction = itemView.findViewById(R.id.updateAction);
             deleteAction = itemView.findViewById(R.id.deleteAction);
@@ -196,6 +197,7 @@ public class BanAdapter extends RecyclerView.Adapter<BanAdapter.BanViewHolder> {
 
         public void bind(BanModel ban) {
             tvNamaBan.setText(ban.getNama_ban());
+            tvTipeBan.setText(ban.getTipe_ban());
             tvIdBan.setText("ID: " + ban.getId_ban());
             try {
                 NumberFormat formatRupiah = NumberFormat.getCurrencyInstance(new Locale("in", "ID"));

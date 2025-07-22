@@ -56,9 +56,6 @@ public class MainActivity extends AppCompatActivity {
         // Initialize progress dialog
         initializeProgressDialog();
 
-        // Cek apakah user sudah login
-        checkLoginStatus();
-
         // Set click listener untuk tombol login
         binding.btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -155,7 +152,11 @@ public class MainActivity extends AppCompatActivity {
             hideLoadingDialog();
 
             if (result.success) {
-                showSuccessAlert(result);
+                if ("pengguna".equalsIgnoreCase(result.role)) {
+                    showErrorAlert("Akses ditolak. Role pengguna tidak diizinkan untuk login melalui aplikasi ini.");
+                } else {
+                    showSuccessAlert(result);
+                }
             } else {
                 showErrorAlert(result.message);
             }
@@ -321,9 +322,6 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case "pimpinan":
                 intent = new Intent(MainActivity.this, MainAdminActivity.class); // Bisa diganti ke MainPimpinanActivity jika ada
-                break;
-            case "pengguna":
-                intent = new Intent(MainActivity.this, MainAdminActivity.class); // Bisa diganti ke MainPenggunaActivity jika ada
                 break;
             default:
                 showErrorAlert("Role tidak valid: " + role);

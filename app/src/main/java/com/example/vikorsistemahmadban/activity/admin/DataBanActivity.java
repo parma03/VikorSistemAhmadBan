@@ -19,8 +19,11 @@ import android.text.TextWatcher;
 import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -415,7 +418,7 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
         TextView tvCreatedAtDetail = dialogView.findViewById(R.id.tvCreatedAtDetail);
 
         // Set data
-        tvNamaBanDetail.setText(ban.getNama_ban());
+        tvNamaBanDetail.setText(ban.getNama_ban() + "(" + ban.getTipe_ban() + ")");
         try {
             NumberFormat formatRupiah = NumberFormat.getCurrencyInstance(new Locale("in", "ID"));
             double hargaValue = Double.parseDouble(ban.getHarga());
@@ -511,7 +514,15 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
         EditText etNamaBan = dialogView.findViewById(R.id.etNamaBan);
         EditText etHarga = dialogView.findViewById(R.id.etHarga);
         EditText etDeskripsi = dialogView.findViewById(R.id.etDeskripsi);
+        Spinner spinnerTipeBan = dialogView.findViewById(R.id.spinnerTipeBan);
         ImageView ivFotoBan = dialogView.findViewById(R.id.ivFotoBan);
+
+        // Setup spinner for tipe_ban
+        String[] tipeBanOptions = {"Pilih Tipe Ban", "Offroad", "Daily", "Sport", "Touring"};
+        ArrayAdapter<String> tipeBanAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, tipeBanOptions);
+        tipeBanAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinnerTipeBan.setAdapter(tipeBanAdapter);
 
         // Setup image click listener
         currentImageView = ivFotoBan;
@@ -524,6 +535,18 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
             etNamaBan.setText(ban.getNama_ban());
             etHarga.setText(ban.getHarga());
             etDeskripsi.setText(ban.getDeskripsi());
+
+            // Set spinner selection for tipe_ban
+            if (ban.getTipe_ban() != null && !ban.getTipe_ban().trim().isEmpty()) {
+                for (int i = 0; i < tipeBanOptions.length; i++) {
+                    if (tipeBanOptions[i].equals(ban.getTipe_ban())) {
+                        spinnerTipeBan.setSelection(i);
+                        break;
+                    }
+                }
+            } else {
+                spinnerTipeBan.setSelection(0); // Default to "Pilih Tipe Ban"
+            }
 
             // Load existing image - Handle null/empty
             if (ban.getFoto_ban() != null && !ban.getFoto_ban().trim().isEmpty()) {
@@ -556,9 +579,10 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
             }
 
         } else {
-            // New data - set default image
+            // New data - set default image and spinner
             ivFotoBan.setImageResource(R.mipmap.ic_tire_foreground);
             selectedImageBase64 = "";
+            spinnerTipeBan.setSelection(0); // Default to "Pilih Tipe Ban"
         }
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
@@ -568,6 +592,13 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
                     String namaBan = etNamaBan.getText().toString().trim();
                     String hargaBan = etHarga.getText().toString().trim();
                     String deskripsiBan = etDeskripsi.getText().toString().trim();
+
+                    // Get selected tipe_ban
+                    String tipeBan = null;
+                    int selectedPosition = spinnerTipeBan.getSelectedItemPosition();
+                    if (selectedPosition > 0) { // Skip "Pilih Tipe Ban" option
+                        tipeBan = tipeBanOptions[selectedPosition];
+                    }
 
                     // Handle image - dapat null/kosong
                     String fotoBan = null;
@@ -584,8 +615,14 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
                     }
                     // Else: new data without image - remains null
 
+                    // Validation
                     if (namaBan.isEmpty() || hargaBan.isEmpty() || deskripsiBan.isEmpty()) {
                         Toast.makeText(this, "Nama Produk Ban, Harga, dan Deskripsi harus diisi!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (tipeBan == null) {
+                        Toast.makeText(this, "Tipe Ban harus dipilih!", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
@@ -594,6 +631,7 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
                             namaBan,
                             hargaBan,
                             deskripsiBan,
+                            tipeBan, // Add tipe_ban parameter
                             fotoBan,
                             ban != null ? ban.getCreated_at() : new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date())
                     );
@@ -609,7 +647,6 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
                 .setNegativeButton("Batal", null)
                 .show();
     }
-
     private void showDeleteConfirmationDialog(BanModel ban) {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle("Konfirmasi Hapus")
@@ -642,6 +679,7 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
                                 rs.getString("nama_ban"),
                                 rs.getString("harga"),
                                 rs.getString("deskripsi"),
+                                rs.getString("tipe_ban"),
                                 rs.getString("foto_ban"),
                                 rs.getString("created_at")
                         );
@@ -674,18 +712,20 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
             try {
                 conn = jdbcConnection.getConnection();
                 if (conn != null) {
-                    String query = "INSERT INTO tb_ban (nama_ban, harga, deskripsi, foto_ban, created_at) VALUES (?, ?, ?, ?, ?)";
+                    String query = "INSERT INTO tb_ban (nama_ban, harga, deskripsi, tipe_ban, foto_ban, created_at) VALUES (?, ?, ?, ?, ?, ?)";
                     PreparedStatement ps = conn.prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
                     ps.setString(1, newBan.getNama_ban());
                     ps.setString(2, newBan.getHarga());
                     ps.setString(3, newBan.getDeskripsi());
+                    ps.setString(4, newBan.getTipe_ban()); // Add tipe_ban
+
                     // Handle image - bisa null
                     if (newBan.getFoto_ban() != null && !newBan.getFoto_ban().trim().isEmpty()) {
-                        ps.setString(4, newBan.getFoto_ban());
+                        ps.setString(5, newBan.getFoto_ban());
                     } else {
-                        ps.setNull(4, java.sql.Types.LONGVARCHAR); // atau TEXT/CLOB tergantung database
+                        ps.setNull(5, java.sql.Types.LONGVARCHAR); // atau TEXT/CLOB tergantung database
                     }
-                    ps.setString(5, newBan.getCreated_at());
+                    ps.setString(6, newBan.getCreated_at());
                     return ps.executeUpdate() > 0;
                 }
             } catch (SQLException e) {
@@ -720,17 +760,19 @@ public class DataBanActivity extends AppCompatActivity implements BanAdapter.OnI
                 conn = jdbcConnection.getConnection();
                 if (conn != null) {
                     // Update
-                    String query = "UPDATE tb_ban SET nama_ban=?, harga=?, deskripsi=?, foto_ban=? WHERE id_ban=?";
+                    String query = "UPDATE tb_ban SET nama_ban=?, harga=?, deskripsi=?, tipe_ban=?, foto_ban=? WHERE id_ban=?";
                     PreparedStatement ps = conn.prepareStatement(query);
                     ps.setString(1, updatedBan.getNama_ban());
                     ps.setString(2, updatedBan.getHarga());
                     ps.setString(3, updatedBan.getDeskripsi());
+                    ps.setString(4, updatedBan.getTipe_ban()); // Add tipe_ban
+
                     if (updatedBan.getFoto_ban() != null && !updatedBan.getFoto_ban().trim().isEmpty()) {
-                        ps.setString(4, updatedBan.getFoto_ban());
+                        ps.setString(5, updatedBan.getFoto_ban());
                     } else {
-                        ps.setNull(4, java.sql.Types.LONGVARCHAR); // atau TEXT/CLOB tergantung database
+                        ps.setNull(5, java.sql.Types.LONGVARCHAR); // atau TEXT/CLOB tergantung database
                     }
-                    ps.setString(5, updatedBan.getId_ban());
+                    ps.setString(6, updatedBan.getId_ban());
                     return ps.executeUpdate() > 0;
                 }
             } catch (SQLException e) {

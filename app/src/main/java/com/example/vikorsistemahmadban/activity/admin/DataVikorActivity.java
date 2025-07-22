@@ -38,6 +38,7 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +51,10 @@ import java.util.HashSet;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Environment;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -104,6 +109,7 @@ public class DataVikorActivity extends AppCompatActivity {
     private List<VikorResultModel> originalVikorResults = new ArrayList<>();
     private DatePickerDialog datePickerDialog;
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    private String selectedTipeBan = "";
 
 
     @Override
@@ -119,12 +125,47 @@ public class DataVikorActivity extends AppCompatActivity {
         });
 
         jdbcConnection = new JDBCConnection();
+        setupTipeBanSpinner();
         getUserRole();
         setupMenuBasedOnRole();
         setupRecyclerView();
         setupExportButtons();
         setupFilterButtons();
         loadDataAndCalculateVikor();
+    }
+
+    private void setupTipeBanSpinner() {
+        // Setup spinner tipe ban
+        List<String> tipeBanOptions = Arrays.asList("Semua Tipe", "Offroad", "Daily", "Sport", "Touring");
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item, tipeBanOptions) {
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                View view = super.getDropDownView(position, convertView, parent);
+                TextView textView = (TextView) view;
+                textView.setPadding(16, 12, 16, 12);
+                return view;
+            }
+        };
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.spinnerTipeBan.setAdapter(adapter);
+
+        binding.spinnerTipeBan.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selected = tipeBanOptions.get(position);
+                if ("Semua Tipe".equals(selected)) {
+                    selectedTipeBan = "";
+                } else {
+                    selectedTipeBan = selected;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedTipeBan = "";
+            }
+        });
     }
 
     private void getUserRole() {
@@ -168,6 +209,8 @@ public class DataVikorActivity extends AppCompatActivity {
                 binding.btnExportPDF.setVisibility(View.VISIBLE);
                 break;
             default:
+                binding.btnExportExcel.setVisibility(View.GONE);
+                binding.btnExportPDF.setVisibility(View.GONE);
                 break;
         }
     }
@@ -218,6 +261,7 @@ public class DataVikorActivity extends AppCompatActivity {
                             rs.getString("nama_ban"),
                             rs.getString("harga"),
                             rs.getString("deskripsi"),
+                            rs.getString("tipe_ban"),
                             rs.getString("foto_ban"),
                             rs.getString("created_at")
                     );
@@ -479,6 +523,14 @@ public class DataVikorActivity extends AppCompatActivity {
                 }
             }
 
+            // Filter berdasarkan tipe ban - TAMBAHAN BARU
+            if (passFilter && !selectedTipeBan.isEmpty()) {
+                String resultTipeBan = result.getTipe_ban();
+                if (resultTipeBan == null || !resultTipeBan.equalsIgnoreCase(selectedTipeBan)) {
+                    passFilter = false;
+                }
+            }
+
             if (passFilter) {
                 filteredResults.add(result);
             }
@@ -505,6 +557,7 @@ public class DataVikorActivity extends AppCompatActivity {
         hargaMax = null;
         selectedDateFrom = "";
         selectedDateTo = "";
+        selectedTipeBan = ""; // TAMBAHAN BARU
 
         // Reset UI
         binding.etHargaMin.setText("");
@@ -513,6 +566,7 @@ public class DataVikorActivity extends AppCompatActivity {
         binding.btnDateTo.setText("Sampai Tanggal");
         binding.btnDateFrom.setTextColor(getResources().getColor(R.color.bronze));
         binding.btnDateTo.setTextColor(getResources().getColor(R.color.bronze));
+        binding.spinnerTipeBan.setSelection(0); // TAMBAHAN BARU - Reset ke "Semua Tipe"
 
         // Tampilkan semua data
         currentVikorResults = new ArrayList<>(originalVikorResults);
@@ -520,6 +574,7 @@ public class DataVikorActivity extends AppCompatActivity {
 
         Toast.makeText(this, "Filter direset", Toast.LENGTH_SHORT).show();
     }
+
 
     private void calculateVikorRanking() {
         List<VikorResultModel> vikorResults = new ArrayList<>();
@@ -697,6 +752,7 @@ public class DataVikorActivity extends AppCompatActivity {
                 if (ban != null) {
                     VikorResultModel result = new VikorResultModel();
                     result.setNamaBan(ban.getNama_ban());
+                    result.setTipe_ban(ban.getTipe_ban());
                     result.setTanggal(date);
                     result.setHargaBan(ban.getHarga());
                     result.setAlternatif("A" + banId + "_" + date.replace("-", ""));

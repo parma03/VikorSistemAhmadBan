@@ -71,6 +71,17 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
+        <!-- Ban Tipe -->
+        <TextView
+            android:id="@+id/tvTipeBan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:text="Tipe"
+            android:textColor="@color/textColor"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
         <!-- Price and Date Information -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -174,7 +185,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Si = 0.7501"
-                    android:textColor="@color/textColor"
+                    android:textColor="@color/black"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -204,7 +215,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Ri = 0.15"
-                    android:textColor="@color/textColor"
+                    android:textColor="@color/black"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 
@@ -234,7 +245,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Qi = 0.6487"
-                    android:textColor="@color/textColor"
+                    android:textColor="@color/black"
                     android:textSize="13sp"
                     android:textStyle="bold" />
 

@@ -5,14 +5,16 @@ public class BanModel {
     public String nama_ban;
     public String harga;
     public String deskripsi;
+    public String tipe_ban;
     public String foto_ban;
     public String created_at;
 
-    public BanModel(String id_ban, String nama_ban, String harga, String deskripsi, String foto_ban, String created_at) {
+    public BanModel(String id_ban, String nama_ban, String harga, String deskripsi, String tipe_ban, String foto_ban, String created_at) {
         this.id_ban = id_ban;
         this.nama_ban = nama_ban;
         this.harga = harga;
         this.deskripsi = deskripsi;
+        this.tipe_ban = tipe_ban;
         this.foto_ban = foto_ban;
         this.created_at = created_at;
     }
@@ -47,6 +49,14 @@ public class BanModel {
 
     public void setDeskripsi(String deskripsi) {
         this.deskripsi = deskripsi;
+    }
+
+    public String getTipe_ban() {
+        return tipe_ban;
+    }
+
+    public void setTipe_ban(String tipe_ban) {
+        this.tipe_ban = tipe_ban;
     }
 
     public String getFoto_ban() {

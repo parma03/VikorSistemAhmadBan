@@ -1090,6 +1090,7 @@ public class VikorProcesActivity extends AppCompatActivity implements ProsesAdap
                         rs.getString("nama_ban"),
                         rs.getString("harga"),
                         rs.getString("deskripsi"),
+                        rs.getString("tipe_ban"),
                         rs.getString("foto_ban"),
                         rs.getString("created_at")
                 );

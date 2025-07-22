@@ -1,5 +1,6 @@
 package com.example.vikorsistemahmadban.activity.pengguna;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
 
@@ -12,9 +13,11 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.vikorsistemahmadban.LogoutActivity;
 import com.example.vikorsistemahmadban.R;
 import com.example.vikorsistemahmadban.activity.admin.MainAdminActivity;
+import com.example.vikorsistemahmadban.api.PrefManager;
 
 public class MainPenggunaActivity extends AppCompatActivity {
     private Button btnLogout;
+    private PrefManager prefManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,9 +32,25 @@ public class MainPenggunaActivity extends AppCompatActivity {
 
         // Initialize button
         btnLogout = findViewById(R.id.btnLogout);
+        prefManager = new PrefManager(this);
 
         // Set click listener untuk tombol logout
-        btnLogout.setOnClickListener(v -> {
+        btnLogout.setOnClickListener(v -> {prefManager.setLoginStatus(false);
+            prefManager.setId("");
+            prefManager.setUsername("");
+            prefManager.setTipe("");
+            prefManager.setNama("");
+            prefManager.setImg("");
+            prefManager.setEmail("");
+            prefManager.setPassword("");
+            prefManager.setNohp("");
+
+            // Clear SharedPreferences UserSession
+            SharedPreferences sharedPreferences = getSharedPreferences("UserSession", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.clear();
+            editor.apply();
+
             // Panggil LogoutHelper untuk menampilkan konfirmasi dan logout
             LogoutActivity.showLogoutConfirmation(MainPenggunaActivity.this);
         });

@@ -20,6 +20,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.vikorsistemahmadban.LogoutActivity;
 import com.example.vikorsistemahmadban.R;
 import com.example.vikorsistemahmadban.api.JDBCConnection;
+import com.example.vikorsistemahmadban.api.PrefManager;
 import com.example.vikorsistemahmadban.databinding.ActivityMainAdminBinding;
 import com.example.vikorsistemahmadban.model.BanModel;
 import com.example.vikorsistemahmadban.model.KriteriaModel;
@@ -57,6 +58,7 @@ public class MainAdminActivity extends AppCompatActivity {
     private List<KriteriaModel> kriteriaList = new ArrayList<>();
     private List<SubKriteriaModel> subKriteriaList = new ArrayList<>();
     private List<ProsesModel> prosesList = new ArrayList<>();
+    private PrefManager prefManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +71,7 @@ public class MainAdminActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        prefManager = new PrefManager(this);
 
         jdbcConnection = new JDBCConnection();
         getUserRole();
@@ -186,6 +189,22 @@ public class MainAdminActivity extends AppCompatActivity {
 
         binding.menuLogout.setOnClickListener(v -> {
             hideDropdownMenu();
+            prefManager.setLoginStatus(false);
+            prefManager.setId("");
+            prefManager.setUsername("");
+            prefManager.setTipe("");
+            prefManager.setNama("");
+            prefManager.setImg("");
+            prefManager.setEmail("");
+            prefManager.setPassword("");
+            prefManager.setNohp("");
+
+            // Clear SharedPreferences UserSession
+            SharedPreferences sharedPreferences = getSharedPreferences("UserSession", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.clear();
+            editor.apply();
+
             // Panggil LogoutHelper untuk menampilkan konfirmasi dan logout
             LogoutActivity.showLogoutConfirmation(MainAdminActivity.this);
         });
@@ -287,6 +306,7 @@ public class MainAdminActivity extends AppCompatActivity {
                             rs.getString("nama_ban"),
                             rs.getString("harga"),
                             rs.getString("deskripsi"),
+                            rs.getString("tipe_ban"),
                             rs.getString("foto_ban"),
                             rs.getString("created_at")
                     );

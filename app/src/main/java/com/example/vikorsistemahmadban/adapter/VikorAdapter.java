@@ -52,6 +52,7 @@ public class VikorAdapter extends RecyclerView.Adapter<VikorAdapter.VikorViewHol
         // Set ranking text with different styling
         holder.tvRanking.setText("Ranking " + vikor.getRanking());
         holder.tvNamaBan.setText(vikor.getNamaBan());
+        holder.tvTipeBan.setText(vikor.getTipe_ban());
         holder.tvTanggal.setText(vikor.getTanggal());
 
         // Format price to Indonesian Rupiah
@@ -203,7 +204,7 @@ public class VikorAdapter extends RecyclerView.Adapter<VikorAdapter.VikorViewHol
     }
 
     public static class VikorViewHolder extends RecyclerView.ViewHolder {
-        TextView tvRanking, tvTanggal, tvHarga, tvNamaBan, tvAlternatif, tvSiValue, tvRiValue, tvQiValue;
+        TextView tvRanking, tvTanggal, tvHarga, tvNamaBan, tvTipeBan, tvAlternatif, tvSiValue, tvRiValue, tvQiValue;
         ImageView ivTrophy; // Optional trophy icon
 
         public VikorViewHolder(@NonNull View itemView) {
@@ -212,6 +213,7 @@ public class VikorAdapter extends RecyclerView.Adapter<VikorAdapter.VikorViewHol
             tvTanggal = itemView.findViewById(R.id.tvTanggal);
             tvHarga = itemView.findViewById(R.id.tvHarga);
             tvNamaBan = itemView.findViewById(R.id.tvNamaBan);
+            tvTipeBan = itemView.findViewById(R.id.tvTipeBan);
             tvAlternatif = itemView.findViewById(R.id.tvAlternatif);
             tvSiValue = itemView.findViewById(R.id.tvSiValue);
             tvRiValue = itemView.findViewById(R.id.tvRiValue);

@@ -126,6 +126,17 @@
 
                 <!-- Tire ID -->
                 <TextView
+                    android:id="@+id/tvTipeBan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="offriad"
+                    android:textColor="@color/textColor"
+                    android:textSize="14sp" />
+
+
+                <!-- Tire ID -->
+                <TextView
                     android:id="@+id/tvIdBan"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
