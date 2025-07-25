@@ -23,6 +23,13 @@ public class SubKriteriaAdapter extends RecyclerView.Adapter<SubKriteriaAdapter.
     private List<SubKriteriaModel> subKriteriaList;
     private Context context;
     private OnSubKriteriaActionListener listener;
+    private boolean isReadOnly = false; // Tambahkan flag untuk read-only mode
+    private String userRole = ""; // Tambahkan user role
+
+    // Role constants
+    private static final String ROLE_ADMIN = "admin";
+    private static final String ROLE_PIMPINAN = "pimpinan";
+    private static final String ROLE_PENGGUNA = "pengguna";
 
     public interface OnSubKriteriaActionListener {
         void onEditSubKriteria(SubKriteriaModel subKriteria, int position);
@@ -34,8 +41,26 @@ public class SubKriteriaAdapter extends RecyclerView.Adapter<SubKriteriaAdapter.
         this.subKriteriaList = new ArrayList<>();
     }
 
+    // Constructor dengan parameter read-only dan user role
+    public SubKriteriaAdapter(Context context, boolean isReadOnly, String userRole) {
+        this.context = context;
+        this.subKriteriaList = new ArrayList<>();
+        this.isReadOnly = isReadOnly;
+        this.userRole = userRole;
+    }
+
     public void setOnSubKriteriaActionListener(OnSubKriteriaActionListener listener) {
         this.listener = listener;
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        this.isReadOnly = readOnly;
+        notifyDataSetChanged(); // Refresh untuk menampilkan/menyembunyikan button
+    }
+
+    public void setUserRole(String userRole) {
+        this.userRole = userRole;
+        notifyDataSetChanged(); // Refresh untuk menampilkan/menyembunyikan button
     }
 
     public void setSubKriteriaList(List<SubKriteriaModel> subKriterias) {
@@ -68,6 +93,11 @@ public class SubKriteriaAdapter extends RecyclerView.Adapter<SubKriteriaAdapter.
 
     public List<SubKriteriaModel> getSubKriteriaList() {
         return new ArrayList<>(subKriteriaList);
+    }
+
+    // Method untuk mengecek apakah user memiliki permission edit
+    private boolean hasEditPermission() {
+        return ROLE_ADMIN.equals(userRole);
     }
 
     @NonNull
@@ -110,21 +140,37 @@ public class SubKriteriaAdapter extends RecyclerView.Adapter<SubKriteriaAdapter.
             // Set background color based on classification
             setBackgroundByKlasifikasi(subKriteria.getBobot_sub_kriteria());
 
+            // Kontrol visibility berdasarkan role dan read-only mode
+            setupButtonVisibility();
+
             chipEdit.setOnClickListener(v -> {
-                if (listener != null) {
+                if (listener != null && hasEditPermission() && !isReadOnly) {
                     animateChipClick(chipEdit);
                     listener.onEditSubKriteria(subKriteria, position);
                 }
             });
 
             chipDelete.setOnClickListener(v -> {
-                if (listener != null) {
+                if (listener != null && hasEditPermission() && !isReadOnly) {
                     animateChipClick(chipDelete);
                     listener.onDeleteSubKriteria(subKriteria, position);
                 }
             });
 
             animateItemEntry();
+        }
+
+        private void setupButtonVisibility() {
+            // Sembunyikan button edit dan delete jika:
+            // 1. Mode read-only ATAU
+            // 2. User bukan admin
+            if (isReadOnly || !hasEditPermission()) {
+                chipEdit.setVisibility(View.GONE);
+                chipDelete.setVisibility(View.GONE);
+            } else {
+                chipEdit.setVisibility(View.VISIBLE);
+                chipDelete.setVisibility(View.VISIBLE);
+            }
         }
 
         private void setBackgroundByKlasifikasi(int bobot) {

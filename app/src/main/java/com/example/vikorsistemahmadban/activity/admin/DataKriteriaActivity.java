@@ -433,7 +433,8 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
     }
 
     private void setupSubKriteriaRecyclerView(RecyclerView recyclerView, String kriteriaId, boolean isReadOnly) {
-        SubKriteriaAdapter adapter = new SubKriteriaAdapter(this);
+        // Buat adapter dengan parameter read-only dan user role
+        SubKriteriaAdapter adapter = new SubKriteriaAdapter(this, isReadOnly, userRole);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
@@ -497,14 +498,19 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
         // Set default value
         spinnerJenisKriteria.setText(JENIS_KRITERIA[0], false); // Default to "Benefit"
 
-
         // Show bobot calculation info
         tvBobotLabel.setText("Bobot (Auto calculated from Nilai/400):");
 
-        // Sub kriteria adapter
-        SubKriteriaAdapter subKriteriaAdapter = new SubKriteriaAdapter(this);
+        // Sub kriteria adapter dengan parameter user role
+        SubKriteriaAdapter subKriteriaAdapter = new SubKriteriaAdapter(this, false, userRole);
         rvSubKriteria.setLayoutManager(new LinearLayoutManager(this));
         rvSubKriteria.setAdapter(subKriteriaAdapter);
+
+        // Sembunyikan tombol Add Sub Kriteria jika bukan admin
+        if (!hasEditPermission()) {
+            btnAddSubKriteria.setVisibility(View.GONE);
+            subKriteriaAdapter.setReadOnly(true);
+        }
 
         // Fill data if editing
         if (kriteria != null) {
@@ -521,20 +527,22 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
             spinnerJenisKriteria.setText(JENIS_KRITERIA[0], false);
         }
 
-        // Setup sub kriteria actions
-        subKriteriaAdapter.setOnSubKriteriaActionListener(new SubKriteriaAdapter.OnSubKriteriaActionListener() {
-            @Override
-            public void onEditSubKriteria(SubKriteriaModel subKriteria, int position) {
-                showSubKriteriaFormDialog(subKriteria, position, subKriteriaAdapter);
-            }
+        // Setup sub kriteria actions (hanya jika admin)
+        if (hasEditPermission()) {
+            subKriteriaAdapter.setOnSubKriteriaActionListener(new SubKriteriaAdapter.OnSubKriteriaActionListener() {
+                @Override
+                public void onEditSubKriteria(SubKriteriaModel subKriteria, int position) {
+                    showSubKriteriaFormDialog(subKriteria, position, subKriteriaAdapter);
+                }
 
-            @Override
-            public void onDeleteSubKriteria(SubKriteriaModel subKriteria, int position) {
-                showDeleteSubKriteriaDialog(position, subKriteriaAdapter);
-            }
-        });
+                @Override
+                public void onDeleteSubKriteria(SubKriteriaModel subKriteria, int position) {
+                    showDeleteSubKriteriaDialog(position, subKriteriaAdapter);
+                }
+            });
 
-        btnAddSubKriteria.setOnClickListener(v -> showSubKriteriaFormDialog(null, -1, subKriteriaAdapter));
+            btnAddSubKriteria.setOnClickListener(v -> showSubKriteriaFormDialog(null, -1, subKriteriaAdapter));
+        }
 
         // Add TextWatcher to auto calculate bobot when nilai changes
         etNilai.addTextChangedListener(new TextWatcher() {
@@ -579,70 +587,75 @@ public class DataKriteriaActivity extends AppCompatActivity implements KriteriaA
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setView(dialogView)
                 .setTitle(title)
-                .setPositiveButton("Simpan", (dialog, which) -> {
-                    String namaKriteria = etNamaKriteria.getText().toString().trim();
-                    String jenisKriteria = spinnerJenisKriteria.getText().toString().trim();
-                    String nilaiStr = etNilai.getText().toString().trim();
+                .setNegativeButton("Batal", null);
 
-                    if (namaKriteria.isEmpty() || nilaiStr.isEmpty()) {
-                        Toast.makeText(this, "Nama Kriteria dan Nilai harus diisi!", Toast.LENGTH_SHORT).show();
+        // Hanya tampilkan tombol Simpan jika admin
+        if (hasEditPermission()) {
+            builder.setPositiveButton("Simpan", (dialog, which) -> {
+                String namaKriteria = etNamaKriteria.getText().toString().trim();
+                String jenisKriteria = spinnerJenisKriteria.getText().toString().trim();
+                String nilaiStr = etNilai.getText().toString().trim();
+
+                if (namaKriteria.isEmpty() || nilaiStr.isEmpty()) {
+                    Toast.makeText(this, "Nama Kriteria dan Nilai harus diisi!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (!jenisKriteria.equals("Benefit") && !jenisKriteria.equals("Cost")) {
+                    Toast.makeText(this, "Jenis kriteria harus Benefit atau Cost!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                try {
+                    int nilai = Integer.parseInt(nilaiStr);
+                    if (nilai > MAX_NILAI) {
+                        Toast.makeText(this, "Nilai maksimal adalah " + MAX_NILAI, Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    if (!jenisKriteria.equals("Benefit") && !jenisKriteria.equals("Cost")) {
-                        Toast.makeText(this, "Jenis kriteria harus Benefit atau Cost!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+                    double bobot = (double) nilai / MAX_NILAI;
+                    String bobotStr = String.format(Locale.US, "%.2f", bobot);
 
+                    // Validasi tambahan untuk memastikan format DECIMAL(5,2)
                     try {
-                        int nilai = Integer.parseInt(nilaiStr);
-                        if (nilai > MAX_NILAI) {
-                            Toast.makeText(this, "Nilai maksimal adalah " + MAX_NILAI, Toast.LENGTH_SHORT).show();
+                        double bobotCheck = Double.parseDouble(bobotStr);
+                        if (bobotCheck > 999.99) {
+                            Toast.makeText(this, "Bobot melebihi batas maksimal (999.99)", Toast.LENGTH_SHORT).show();
                             return;
-                        }
-
-                        double bobot = (double) nilai / MAX_NILAI;
-                        String bobotStr = String.format(Locale.US, "%.2f", bobot);
-
-                        // Validasi tambahan untuk memastikan format DECIMAL(5,2)
-                        try {
-                            double bobotCheck = Double.parseDouble(bobotStr);
-                            if (bobotCheck > 999.99) {
-                                Toast.makeText(this, "Bobot melebihi batas maksimal (999.99)", Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-                        } catch (NumberFormatException e) {
-                            Toast.makeText(this, "Format bobot tidak valid!", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-
-                        List<SubKriteriaModel> subKriteriaList = subKriteriaAdapter.getSubKriteriaList();
-                        if (subKriteriaList.isEmpty()) {
-                            Toast.makeText(this, "Minimal harus ada 1 sub kriteria!", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-
-                        KriteriaModel newKriteria = new KriteriaModel(
-                                kriteria != null ? kriteria.getId_kriteria() : null,
-                                namaKriteria,
-                                jenisKriteria,
-                                nilaiStr,
-                                bobotStr
-                        );
-
-                        if (kriteria == null) {
-                            // Add new kriteria with sub kriteria
-                            new AddKriteriaWithSubKriteriaTask().execute(new KriteriaWithSubKriteria(newKriteria, subKriteriaList));
-                        } else {
-                            // Update kriteria with sub kriteria
-                            new UpdateKriteriaWithSubKriteriaTask().execute(new KriteriaWithSubKriteria(newKriteria, subKriteriaList));
                         }
                     } catch (NumberFormatException e) {
-                        Toast.makeText(this, "Nilai harus berupa angka!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Format bobot tidak valid!", Toast.LENGTH_SHORT).show();
+                        return;
                     }
-                })
-                .setNegativeButton("Batal", null)
-                .show();
+
+                    List<SubKriteriaModel> subKriteriaList = subKriteriaAdapter.getSubKriteriaList();
+                    if (subKriteriaList.isEmpty()) {
+                        Toast.makeText(this, "Minimal harus ada 1 sub kriteria!", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    KriteriaModel newKriteria = new KriteriaModel(
+                            kriteria != null ? kriteria.getId_kriteria() : null,
+                            namaKriteria,
+                            jenisKriteria,
+                            nilaiStr,
+                            bobotStr
+                    );
+
+                    if (kriteria == null) {
+                        // Add new kriteria with sub kriteria
+                        new AddKriteriaWithSubKriteriaTask().execute(new KriteriaWithSubKriteria(newKriteria, subKriteriaList));
+                    } else {
+                        // Update kriteria with sub kriteria
+                        new UpdateKriteriaWithSubKriteriaTask().execute(new KriteriaWithSubKriteria(newKriteria, subKriteriaList));
+                    }
+                } catch (NumberFormatException e) {
+                    Toast.makeText(this, "Nilai harus berupa angka!", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        builder.show();
     }
 
     private void loadSubKriteriaForEdit(SubKriteriaAdapter adapter, String kriteriaId) {
