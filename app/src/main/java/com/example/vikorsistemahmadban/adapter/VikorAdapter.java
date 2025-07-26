@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -27,10 +28,21 @@ public class VikorAdapter extends RecyclerView.Adapter<VikorAdapter.VikorViewHol
     private Context context;
     private List<VikorResultModel> vikorList;
     private DecimalFormat df = new DecimalFormat("#.####");
+    private String userRole;
+    private static final String ROLE_ADMIN = "admin";
+    private static final String ROLE_PIMPINAN = "pimpinan";
+    private static final String ROLE_PENGGUNA = "pengguna";
+
+    public VikorAdapter(Context context, String userRole) {
+        this.context = context;
+        this.vikorList = new ArrayList<>();
+        this.userRole = userRole;
+    }
 
     public VikorAdapter(Context context) {
         this.context = context;
         this.vikorList = new ArrayList<>();
+        this.userRole = ROLE_PENGGUNA; // Default ke pengguna
     }
 
     public void setVikorList(List<VikorResultModel> vikorList) {
@@ -67,14 +79,56 @@ public class VikorAdapter extends RecyclerView.Adapter<VikorAdapter.VikorViewHol
         // Set background and trophy icon based on ranking
         setupRankingVisuals(holder, vikor.getRanking());
 
+        // MODIFIKASI: Setup visibility berdasarkan user role
+        setupViewBasedOnRole(holder);
+
         // Add entrance animation
         animateItemEntry(holder.itemView, position);
 
-        // Click listener with animation
-        holder.itemView.setOnClickListener(v -> {
-            animateClick(v);
-            showCalculationDetails(vikor);
-        });
+        // MODIFIKASI: Click listener berdasarkan user role
+        setupClickListener(holder, vikor);
+    }
+
+    private void setupViewBasedOnRole(VikorViewHolder holder) {
+        if (ROLE_PENGGUNA.equals(userRole)) {
+            // Untuk pengguna: sembunyikan cardInfo, textViewDetail, line1
+            if (holder.cardInfo != null) {
+                holder.cardInfo.setVisibility(View.GONE);
+            }
+            if (holder.textViewDetail != null) {
+                holder.textViewDetail.setVisibility(View.GONE);
+            }
+            if (holder.line1 != null) {
+                holder.line1.setVisibility(View.GONE);
+            }
+        } else {
+            // Untuk admin dan pimpinan: tampilkan semua
+            if (holder.cardInfo != null) {
+                holder.cardInfo.setVisibility(View.VISIBLE);
+            }
+            if (holder.textViewDetail != null) {
+                holder.textViewDetail.setVisibility(View.VISIBLE);
+            }
+            if (holder.line1 != null) {
+                holder.line1.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private void setupClickListener(VikorViewHolder holder, VikorResultModel vikor) {
+        if (ROLE_PENGGUNA.equals(userRole)) {
+            // Untuk pengguna: hanya animasi click, tidak tampilkan detail
+            holder.itemView.setOnClickListener(v -> {
+                animateClick(v);
+                // Tidak ada showCalculationDetails
+            });
+        } else {
+            // Untuk admin dan pimpinan: tampilkan detail
+            holder.itemView.setOnClickListener(v -> {
+                animateClick(v);
+                showCalculationDetails(vikor);
+            });
+        }
     }
 
     private String formatToRupiah(String hargaString) {
@@ -207,6 +261,10 @@ public class VikorAdapter extends RecyclerView.Adapter<VikorAdapter.VikorViewHol
         TextView tvRanking, tvTanggal, tvHarga, tvNamaBan, tvTipeBan, tvAlternatif, tvSiValue, tvRiValue, tvQiValue;
         ImageView ivTrophy; // Optional trophy icon
 
+        // TAMBAHAN: Field untuk elemen yang akan disembunyikan
+        LinearLayout cardInfo, textViewDetail;
+        View line1;
+
         public VikorViewHolder(@NonNull View itemView) {
             super(itemView);
             tvRanking = itemView.findViewById(R.id.tvRanking);
@@ -218,6 +276,11 @@ public class VikorAdapter extends RecyclerView.Adapter<VikorAdapter.VikorViewHol
             tvSiValue = itemView.findViewById(R.id.tvSiValue);
             tvRiValue = itemView.findViewById(R.id.tvRiValue);
             tvQiValue = itemView.findViewById(R.id.tvQiValue);
+
+            // TAMBAHAN: Inisialisasi elemen yang akan disembunyikan
+            cardInfo = itemView.findViewById(R.id.cardInfo);
+            textViewDetail = itemView.findViewById(R.id.textViewDetail);
+            line1 = itemView.findViewById(R.id.line1);
         }
     }
 }

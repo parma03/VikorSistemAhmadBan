@@ -216,7 +216,8 @@ public class DataVikorActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        vikorAdapter = new VikorAdapter(this);
+        // PERUBAHAN: Pass userRole ke adapter
+        vikorAdapter = new VikorAdapter(this, userRole);
         binding.rvVikorResults.setLayoutManager(new LinearLayoutManager(this));
         binding.rvVikorResults.setAdapter(vikorAdapter);
     }
@@ -422,6 +423,30 @@ public class DataVikorActivity extends AppCompatActivity {
         binding.btnResetFilter.setOnClickListener(v -> resetFilters());
     }
 
+    private void viewAllData() {
+        // Reset semua filter
+        hargaMin = null;
+        hargaMax = null;
+        selectedDateFrom = "";
+        selectedDateTo = "";
+        selectedTipeBan = "";
+
+        // Reset UI
+        binding.etHargaMin.setText("");
+        binding.etHargaMax.setText("");
+        binding.btnDateFrom.setText("Dari Tanggal");
+        binding.btnDateTo.setText("Sampai Tanggal");
+        binding.btnDateFrom.setTextColor(getResources().getColor(R.color.bronze));
+        binding.btnDateTo.setTextColor(getResources().getColor(R.color.bronze));
+        binding.spinnerTipeBan.setSelection(0);
+
+        // Tampilkan semua data
+        currentVikorResults = new ArrayList<>(originalVikorResults);
+        vikorAdapter.setVikorList(currentVikorResults);
+
+        Toast.makeText(this, "Menampilkan semua data (" + originalVikorResults.size() + " data)", Toast.LENGTH_SHORT).show();
+    }
+
     private void showDatePickerDialog(boolean isFromDate) {
         Calendar calendar = Calendar.getInstance();
 
@@ -557,7 +582,7 @@ public class DataVikorActivity extends AppCompatActivity {
         hargaMax = null;
         selectedDateFrom = "";
         selectedDateTo = "";
-        selectedTipeBan = ""; // TAMBAHAN BARU
+        selectedTipeBan = "";
 
         // Reset UI
         binding.etHargaMin.setText("");
@@ -566,15 +591,14 @@ public class DataVikorActivity extends AppCompatActivity {
         binding.btnDateTo.setText("Sampai Tanggal");
         binding.btnDateFrom.setTextColor(getResources().getColor(R.color.bronze));
         binding.btnDateTo.setTextColor(getResources().getColor(R.color.bronze));
-        binding.spinnerTipeBan.setSelection(0); // TAMBAHAN BARU - Reset ke "Semua Tipe"
+        binding.spinnerTipeBan.setSelection(0);
 
-        // Tampilkan semua data
-        currentVikorResults = new ArrayList<>(originalVikorResults);
+        // PERUBAHAN: Tampilkan list kosong, bukan semua data
+        currentVikorResults = new ArrayList<>();
         vikorAdapter.setVikorList(currentVikorResults);
 
-        Toast.makeText(this, "Filter direset", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Filter direset. Pilih filter atau 'Lihat Semua Data' untuk menampilkan data.", Toast.LENGTH_SHORT).show();
     }
-
 
     private void calculateVikorRanking() {
         List<VikorResultModel> vikorResults = new ArrayList<>();
@@ -611,8 +635,10 @@ public class DataVikorActivity extends AppCompatActivity {
 
         // Simpan data original untuk filter
         originalVikorResults = new ArrayList<>(vikorResults);
-        currentVikorResults = vikorResults;
-        vikorAdapter.setVikorList(vikorResults);
+
+        // PERUBAHAN: Jangan langsung tampilkan data, biarkan kosong
+        currentVikorResults = new ArrayList<>(); // Kosong
+        vikorAdapter.setVikorList(currentVikorResults); // Tampilkan list kosong
     }
 
     private List<VikorResultModel> calculateVikorForDate(String date, List<ProsesModel> prosesForDate, Set<String> banIdsForDate) {

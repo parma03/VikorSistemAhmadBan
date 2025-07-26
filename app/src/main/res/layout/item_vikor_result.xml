@@ -164,6 +164,7 @@
 
         <!-- Calculation Results Grid -->
         <LinearLayout
+            android:id="@+id/cardInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -263,6 +264,7 @@
 
         <!-- Click Indicator -->
         <View
+            android:id="@+id/line1"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_marginTop="16dp"
@@ -270,6 +272,7 @@
             android:background="@drawable/gradient_divider" />
 
         <LinearLayout
+            android:id="@+id/textViewDetail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
